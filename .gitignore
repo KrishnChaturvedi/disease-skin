@@ -1,0 +1,43 @@
+# ========================
+# Node.js (Backend & Frontend)
+# ========================
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.next/
+
+# ========================
+# Python (ML Service)
+# ========================
+__pycache__/
+venv/
+env/
+*.pyc
+.pytest_cache/
+
+# ========================
+# Machine Learning Weights (CRITICAL)
+# ========================
+# Prevents breaking GitHub's 100MB file limit
+*.pt
+*.pth
+*.h5
+*.hdf5
+*.pkl
+*.onnx
+
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.local
+
+# ========================
+# OS & Editor Files
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
