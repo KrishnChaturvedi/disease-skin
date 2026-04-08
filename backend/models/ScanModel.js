@@ -2,53 +2,41 @@ import mongoose from "mongoose";
 
 const ScanSchema = new mongoose.Schema({
   
-  // ── Who submitted this scan ──────────────────────────────────────────────
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
 
-  // ── Reference to symptom document (saved by Nikhil's controller) ─────────
+  // ── Links exactly to Nikhil's code ───────────────────────────────────────
   symptomId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Symptom",
-    required: true // <-- The crucial fix for a stable pipeline!
+    required: true 
   },
 
-  // ── Uploaded image (populated by multer + Cloudinary) ────────────────────
   image: {
-    url: { type: String, required: true },        // Cloudinary secure_url
-    publicId: { type: String, required: true },   // Cloudinary public_id
-    originalName: { type: String },               // original filename from phone
+    url: { type: String, required: true },        
+    publicId: { type: String, required: true },   
+    originalName: { type: String },               
   },
 
-  // ── ML model output (populated by Python FastAPI) ─────────────────────────
   mlResult: {
-    disease: { type: String },                    // e.g. "Melanoma"
-    confidence: { type: Number },                 // e.g. 88.5
-    heatmapUrl: { type: String },                 // Grad-CAM image URL
+    disease: { type: String },                    
+    confidence: { type: Number },                 
+    heatmapUrl: { type: String },                 
   },
 
-  // ── Gemini report (5 fields to match Gemini prompt output) ───────────────
-  report: {
-    whatWasFound: { type: String },
-    clinicalContext: { type: String },
-    actionPlan: { type: String },
-    questionsForDoctor: { type: String },
-    preventionFocus: { type: String },
-  },
+ report: { type: String },  // Plain text from Python agent
 
-  // ── Risk level badge ──────────────────────────────────────────────────────
+
   riskLevel: {
     type: String,
     enum: ["low", "medium", "high"],
   },
 
-  // ── Generated PDF URL ─────────────────────────────────────────────────────
   pdfUrl: { type: String },
 
-  // ── Pipeline status ───────────────────────────────────────────────────────
   status: {
     type: String,
     enum: ["pending", "ml_done", "report_done", "complete", "failed"],
