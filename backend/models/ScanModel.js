@@ -1,34 +1,28 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const ScanSchema = new mongoose.Schema({
-  user:{
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required:true
+    required: true
   },
 
-  symptoms:{
-    age:{type:Number, required: true},
-    duration:{type: String, required: true},
-    itches: {type:Boolean, required: true},
-    bleeds: {type: Boolean, required: true},
-    sunExposure: {
-      type: String,
-      enum: ["low", "moderate", "high"],
-      required: true,
-    },
-    familyHistory: { type: Boolean, required: true },
+  // NEW: This single line links Harshit's image to Nikhil's quiz!
+  symptomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Symptom",
+    required: true
   },
 
-  image:{
-    url:{type:String, required:true},
-    publicId:{type:String, required:true},
-    originalName: {type:String}
+  image: {
+    url: { type: String, required: true },
+    publicId: { type: String, required: true },
+    originalName: { type: String }
   },
 
-  mlResult:{
-    disease:{type: String},
-    confidence:{type: Number},
+  mlResult: {
+    disease: { type: String },
+    confidence: { type: Number },
     heatmapUrl: { type: String },
   },
 
@@ -52,7 +46,7 @@ const ScanSchema = new mongoose.Schema({
   },
 
   errorMessage: { type: String },
-},{timestamps:true,});
+}, { timestamps: true });
 
 const ScanModel = mongoose.model("Scan", ScanSchema);
 

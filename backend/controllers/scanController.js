@@ -4,23 +4,20 @@ import ScanModel from "../models/ScanModel.js";
 export const createScan = async (req, res) => {
   try {
     // ── Step 1: Get image info from Cloudinary (populated by multer) ─────────
-    const imageUrl = req.file.path;         // Cloudinary secure_url
-    const publicId = req.file.filename;     // Cloudinary public_id
+    const imageUrl = req.file.path;         
+    const publicId = req.file.filename;     
 
-    // ── Step 2: Get symptom answers from request body ────────────────────────
-    const { age, duration, itches, bleeds, sunExposure, familyHistory } = req.body;
+    // ── Step 2: Grab the ID from Nikhil's saved symptoms ─────────────────────
+    const { symptomId } = req.body;
 
-    // ── Step 3: Create a new scan document in MongoDB (status: pending) ──────
+    if (!symptomId) {
+      return res.status(400).json({ success: false, message: "symptomId is required to link the image to the quiz answers." });
+    }
+
+    // ── Step 3: Create a new scan document in MongoDB ────────────────────────
     const scan = await ScanModel.create({
-      user: req.user._id,        // comes from verifyToken middleware
-      symptoms: {
-        age,
-        duration,
-        itches,
-        bleeds,
-        sunExposure,
-        familyHistory,
-      },
+      user: req.user._id,        
+      symptomId: symptomId, // <--- Relational database magic!
       image: {
         url: imageUrl,
         publicId: publicId,
@@ -38,7 +35,7 @@ export const createScan = async (req, res) => {
 
     // ── Step 5: Call Gemini API to generate report ────────────────────────────
     // TODO: uncomment when geminiService.js is ready
-    // const report = await callGeminiService(mlResult, scan.symptoms);
+    // const report = await callGeminiService(mlResult, symptomId);
     // scan.report = report;
     // scan.riskLevel = calculateRiskLevel(mlResult.confidence);
     // scan.status = "report_done";
@@ -51,10 +48,9 @@ export const createScan = async (req, res) => {
     // scan.status = "complete";
     // await scan.save();
 
-    // ── Step 7: Send response back to frontend ────────────────────────────────
     res.status(201).json({
       success: true,
-      message: "Scan created successfully",
+      message: "Image uploaded and linked to symptoms successfully!",
       scan,
     });
 
