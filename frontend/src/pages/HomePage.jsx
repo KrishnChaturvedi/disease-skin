@@ -1,92 +1,101 @@
 import { Link } from 'react-router-dom'
-import StepCard from '../components/StepCard'
-
-const steps = [
-  {
-    step: 1,
-    title: 'Answer Symptom Questions',
-    description: 'Share key details like duration, itching, pain, sun exposure, and history.',
-  },
-  {
-    step: 2,
-    title: 'Upload Skin Photo',
-    description: 'Upload a smartphone photo for AI-based skin condition screening.',
-  },
-  {
-    step: 3,
-    title: 'Get Triage Result',
-    description: 'Receive risk level and next actions, including home care or doctor links.',
-  },
-]
 
 function HomePage() {
   return (
-    <div className="space-y-10">
-  <section className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-linear-to-br from-indigo-100 via-purple-50 to-violet-100 p-8 text-slate-800 shadow-xl shadow-indigo-200/40 xl:p-10">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-300/35 blur-2xl" />
-  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">
-          AI-Powered Early Screening
-        </p>
-        <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">
-          SkinShield for Smart Early Detection
-        </h1>
-        <p className="mt-4 max-w-2xl text-sm text-slate-700 sm:text-base">
-          Early skin disease and skin cancer triage for Indian users. This app supports
-          awareness, quick action, and doctor consultation guidance.
-        </p>
+    <div className="space-y-24">
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+      {/* ── Hero ── */}
+      <section className="pt-8">
+        <p className="text-sm font-medium text-indigo-500 tracking-wide">
+          A student-built AI screening tool
+        </p>
+        <h1 className="mt-4 text-5xl font-bold leading-tight text-slate-900 sm:text-6xl max-w-2xl">
+          Skin screening that actually makes sense.
+        </h1>
+        <p className="mt-5 max-w-lg text-lg text-slate-500 leading-relaxed">
+          We built SkinShield because early detection shouldn't require a specialist appointment.
+          Answer a few questions, upload a photo, and know what to do next.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
           <Link
             to="/screening/questionnaire"
-            className="inline-flex rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-5 py-2.5 font-semibold text-white shadow-lg shadow-indigo-400/40 transition hover:brightness-110"
+            className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
           >
-            Start Screening
+            Try it now
           </Link>
           <Link
             to="/about"
-            className="inline-flex rounded-full border border-indigo-200 bg-white/70 px-5 py-2.5 font-semibold text-indigo-700 transition hover:bg-white"
+            className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-400"
           >
-            Learn More
+            How it works
           </Link>
         </div>
+      </section>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-indigo-100 bg-white/70 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-indigo-700">Workflow</p>
-            <p className="mt-1 text-sm font-semibold">Questionnaire → Image → Result</p>
-          </div>
-          <div className="rounded-xl border border-indigo-100 bg-white/70 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-indigo-700">Support</p>
-            <p className="mt-1 text-sm font-semibold">eSanjeevani + Hospital Finder</p>
-          </div>
-          <div className="rounded-xl border border-indigo-100 bg-white/70 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-indigo-700">Goal</p>
-            <p className="mt-1 text-sm font-semibold">Faster action, lower risk</p>
-          </div>
+      {/* ── What it does ── */}
+      <section className="grid gap-12 md:grid-cols-2 items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 leading-snug">
+            Built for people who don't know where to start.
+          </h2>
+          <p className="mt-4 text-slate-500 leading-relaxed">
+            Most people notice a skin issue and either ignore it or spiral into a Google search
+            that leads nowhere good. SkinShield gives you a calm, structured way to understand
+            what you're looking at and what to actually do next.
+          </p>
+          <p className="mt-4 text-slate-500 leading-relaxed">
+            It's not a diagnosis. It's a starting point — and sometimes that's all you need.
+          </p>
+        </div>
+        <div className="space-y-4">
+          {[
+            { num: '01', title: 'Answer a short questionnaire', desc: 'Duration, itching, sun exposure — takes about 2 minutes.' },
+            { num: '02', title: 'Upload a photo of the area', desc: 'Any decent smartphone photo works. No special equipment needed.' },
+            { num: '03', title: 'Get a clear result', desc: 'Risk level, possible conditions, and what to do next — in plain English.' },
+          ].map((s) => (
+            <div key={s.num} className="flex gap-5 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <span className="text-xs font-bold text-indigo-400 mt-0.5">{s.num}</span>
+              <div>
+                <p className="font-semibold text-slate-800 text-sm">{s.title}</p>
+                <p className="mt-1 text-sm text-slate-500">{s.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {steps.map((item) => (
-          <StepCard
-            key={item.step}
-            step={item.step}
-            title={item.title}
-            description={item.description}
-          />
-        ))}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-900">Why SkinShield?</h2>
-        <p className="mt-2 text-sm leading-7 text-slate-600">
-          Skin conditions often look minor at first, but early action matters. SkinShield helps
-          users identify risk quickly using a guided process and simple language so they can
-          decide the right next step without delay.
+      {/* ── Honest section ── */}
+      <section className="rounded-2xl bg-indigo-50 border border-indigo-100 px-8 py-10">
+        <h2 className="text-2xl font-bold text-slate-900">We'll be honest with you.</h2>
+        <p className="mt-3 text-slate-600 leading-relaxed max-w-2xl">
+          SkinShield is a college project. We're not doctors, and this isn't a medical product.
+          What we are is a team that spent a lot of time making something genuinely useful —
+          a tool that helps you understand your skin better and know when it's time to see someone.
+        </p>
+        <p className="mt-3 text-slate-600 leading-relaxed max-w-2xl">
+          The AI model is trained on real dermatology data. The reports are generated thoughtfully.
+          But please, if something looks serious — go see a doctor.
         </p>
       </section>
+
+      {/* ── CTA ── */}
+      <section className="text-center pb-4">
+        <h2 className="text-3xl font-bold text-slate-900">Give it a try.</h2>
+        <p className="mt-3 text-slate-500 max-w-md mx-auto">
+          It takes under a minute. No account required to see how it works.
+        </p>
+        <Link
+          to="/screening/questionnaire"
+          className="mt-6 inline-block rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
+        >
+          Start screening
+        </Link>
+      </section>
+
     </div>
   )
 }
 
 export default HomePage
+
+

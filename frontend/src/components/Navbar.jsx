@@ -1,44 +1,88 @@
-import { Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { AuthContext } from '../pages/AuthPage.jsx'
 
 function Navbar() {
+  const navigate = useNavigate()
+  const { user, logout } = useContext(AuthContext)
+
+  function handleLogout() {
+    logout()
+    navigate('/')
+  }
+
+  function handleStartScreening() {
+    if (user) {
+      navigate('/screening')
+    } else {
+      navigate('/auth')
+    }
+  }
+
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link
-          to="/"
-          className="bg-linear-to-r from-indigo-300 to-violet-300 bg-clip-text text-xl font-extrabold tracking-tight text-transparent"
-        >
-          SkinShield AI
+    <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 shadow-sm">
+
+      {/* ── Logo ── */}
+      <Link to="/" className="text-indigo-600 font-bold text-lg tracking-tight">
+        SkinShield AI
+      </Link>
+
+      {/* ── Nav Links ── */}
+      <div className="hidden md:flex items-center gap-6">
+        <Link to="/" className="text-sm text-slate-600 hover:text-slate-900 transition">
+          Home
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-2 text-sm font-medium">
-          <Link
-            to="/"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
-          >
-            Home
-          </Link>
-          <Link
-            to="/about"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
-          >
-            Contact Us
-          </Link>
-          <Link
-            to="/screening/questionnaire"
-            className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"
-          >
-            Start Screening
-          </Link>
-        </nav>
+        <Link to="/about" className="text-sm text-slate-600 hover:text-slate-900 transition">
+          About
+        </Link>
+        <Link to="/contact" className="text-sm text-slate-600 hover:text-slate-900 transition">
+          Contact Us
+        </Link>
       </div>
-    </header>
+
+      {/* ── Auth Buttons ── */}
+      <div className="flex items-center gap-3">
+        {user ? (
+          <>
+            {/* Logged in — show user name + logout */}
+            <span className="text-sm text-slate-600 hidden md:block">
+              Hi, <span className="font-semibold text-slate-800">{user.name}</span>
+            </span>
+            <button
+              onClick={handleStartScreening}
+              className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-400/30 transition hover:brightness-110"
+            >
+              Start Screening
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Not logged in — show login + start screening */}
+            <button
+              onClick={() => navigate('/auth')}
+              className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Login
+            </button>
+            <button
+              onClick={handleStartScreening}
+              className="rounded-full bg-gradient-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-400/30 transition hover:brightness-110"
+            >
+              Start Screening
+            </button>
+          </>
+        )}
+      </div>
+
+    </nav>
   )
 }
 
 export default Navbar
+
