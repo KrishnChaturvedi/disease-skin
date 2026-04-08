@@ -1,11 +1,25 @@
 export const symptomQuestions = [
   {
+    key: 'age',
+    label: 'What is your age?',
+    type: 'number',
+    min: 1,
+    max: 120,
+    placeholder: 'e.g. 25',
+  },
+  {
     key: 'durationDays',
-    label: 'How many days have you had this patch/rash?',
+    label: 'How many days has this been present?',
     type: 'number',
     min: 1,
     max: 3650,
     placeholder: 'e.g. 14',
+  },
+  {
+    key: 'evolution',
+    label: 'Has the spot changed in size, shape, or color?',
+    type: 'select',
+    options: ['No change', 'Growing larger', 'Changing color', 'Becoming irregular'],
   },
   {
     key: 'itchingLevel',
@@ -14,16 +28,16 @@ export const symptomQuestions = [
     options: ['None', 'Mild', 'Moderate', 'Severe'],
   },
   {
-    key: 'painLevel',
-    label: 'Pain level',
+    key: 'physicalChanges',
+    label: 'Physical symptoms (if any)',
     type: 'select',
-    options: ['None', 'Mild', 'Moderate', 'Severe'],
+    options: ['None', 'Bleeding', 'Crusting/Scabbing', 'Painful'],
   },
   {
     key: 'sunExposure',
-    label: 'Daily sun exposure',
+    label: 'Daily sun exposure level',
     type: 'select',
-    options: ['Low', 'Medium', 'High'],
+    options: ['Low (Mostly indoors)', 'Medium (Commute/Short walks)', 'High (Outdoor work/Sports)'],
   },
   {
     key: 'familyHistory',
@@ -34,9 +48,11 @@ export const symptomQuestions = [
 ]
 
 export const initialSymptoms = {
+  age: '',
   durationDays: '',
+  evolution: 'No change',
   itchingLevel: 'None',
-  painLevel: 'None',
-  sunExposure: 'Medium',
+  physicalChanges: 'None',
+  sunExposure: 'Medium (Commute/Short walks)',
   familyHistory: 'No',
 }
