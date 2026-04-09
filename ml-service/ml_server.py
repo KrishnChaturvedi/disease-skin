@@ -12,10 +12,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.agents import create_agent
 
+from core.models.llms import groq_llama3_model, groq_mistral_model, gemini_model
 from core.prompts.system_message import DermatologyReportPrompt, ChatDermatologistPrompt
 from core.tools.dermnet_classifier import create_dermnet_classifier_tool
 from core.tools.search_tool import duck_search_tool
@@ -30,17 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# SCAN ANALYZER AGENT (MobileNetV3 + Gemini)
-# ══════════════════════════════════════════════════════════════════════════════
 print("Loading Scan Analyzer agent...")
-
-analyzer_llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
-    temperature=0.7,
-    google_api_key=os.getenv("GOOGLE_API_KEY")
-)
 
 classifier_tool = create_dermnet_classifier_tool(
     model_path="best_dermnet_model.pth"
@@ -49,7 +39,7 @@ classifier_tool = create_dermnet_classifier_tool(
 analyzer_memory = MemorySaver()
 
 analyzer_agent = create_agent(
-    model=analyzer_llm,
+    model=gemini_model,
     tools=[classifier_tool, duck_search_tool],
     system_prompt=DermatologyReportPrompt,
     checkpointer=analyzer_memory
@@ -57,33 +47,18 @@ analyzer_agent = create_agent(
 
 print("Scan Analyzer ready!")
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CHATBOT AGENT (Groq LLaMA + DuckDuckGo)
-# ══════════════════════════════════════════════════════════════════════════════
 print("Loading Chatbot agent...")
-
-chatbot_llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    temperature=0.7,
-    groq_api_key=os.getenv("GROQ_API_KEY")
-)
 
 chatbot_memory = MemorySaver()
 
 chatbot_agent = create_agent(
-    model=chatbot_llm,
+    model=groq_llama3_model,
     tools=[duck_search_tool],
     system_prompt=ChatDermatologistPrompt,
     checkpointer=chatbot_memory
 )
 
 print("Chatbot ready!")
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# REQUEST SCHEMAS
-# ══════════════════════════════════════════════════════════════════════════════
 
 class ScanRequest(BaseModel):
     imageUrl: str       # Cloudinary URL
@@ -93,11 +68,6 @@ class ScanRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str        # user's message
     sessionId: str      # unique session per user (e.g. userId from MongoDB)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def download_image(url: str) -> str:
     """Download image from Cloudinary to a temp file."""
@@ -115,20 +85,20 @@ def download_image(url: str) -> str:
 def build_scan_prompt(symptoms: dict, image_path: str) -> str:
     """Build the prompt for the scan analyzer agent."""
     return f"""
-Patient Questionnaire Answers:
-- Age: {symptoms.get('age', 'N/A')}
-- Duration: {symptoms.get('durationDays', 'N/A')} days
-- Evolution (changed?): {symptoms.get('evolution', 'N/A')}
-- Itching Level: {symptoms.get('itchingLevel', 'N/A')}
-- Physical Symptoms: {symptoms.get('physicalSymptoms', 'N/A')}
-- Sun Exposure: {symptoms.get('sunExposure', 'N/A')}
-- Family History of Skin Disease: {symptoms.get('familyHistory', 'N/A')}
+            Patient Questionnaire Answers:
+            - Age: {symptoms.get('age', 'N/A')}
+            - Duration: {symptoms.get('durationDays', 'N/A')} days
+            - Evolution (changed?): {symptoms.get('evolution', 'N/A')}
+            - Itching Level: {symptoms.get('itchingLevel', 'N/A')}
+            - Physical Symptoms: {symptoms.get('physicalSymptoms', 'N/A')}
+            - Sun Exposure: {symptoms.get('sunExposure', 'N/A')}
+            - Family History of Skin Disease: {symptoms.get('familyHistory', 'N/A')}
 
-Image Path:
-{image_path}
+            Image Path:
+            {image_path}
 
-Please analyze the image using the skin_condition_classifier tool, then generate a full dermatology report using the questionnaire answers and classification result.
-"""
+            Please analyze the image using the skin_condition_classifier tool, then generate a full dermatology report using the questionnaire answers and classification result.
+            """
 
 
 def parse_ml_result(messages: list) -> tuple:
@@ -154,29 +124,18 @@ def parse_ml_result(messages: list) -> tuple:
 
     return disease, confidence
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# ENDPOINTS
-# ══════════════════════════════════════════════════════════════════════════════
-
-# ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "SkinShield ML"}
 
-
-# ── Scan analyzer ─────────────────────────────────────────────────────────────
 @app.post("/analyze")
 async def analyze_skin(request: ScanRequest):
     tmp_path = None
     try:
-        # Download image from Cloudinary
         tmp_path = download_image(request.imageUrl)
 
-        # Build prompt
         prompt = build_scan_prompt(request.symptoms, tmp_path)
 
-        # Run analyzer agent
         response = analyzer_agent.invoke(
             {"messages": [{"role": "user", "content": prompt}]},
             config={"configurable": {"thread_id": request.scanId}}
@@ -199,8 +158,6 @@ async def analyze_skin(request: ScanRequest):
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
 
-
-# ── Chatbot ───────────────────────────────────────────────────────────────────
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
