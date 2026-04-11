@@ -22,7 +22,6 @@ env/
 # ========================
 # Prevents breaking GitHub's 100MB file limit
 *.pt
-*.pth
 *.h5
 *.hdf5
 *.pkl

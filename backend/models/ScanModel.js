@@ -8,7 +8,7 @@ const ScanSchema = new mongoose.Schema({
     required: true
   },
 
-  // ── Links exactly to Nikhil's code ───────────────────────────────────────
+  // ── Links exactly to Nikhil's code ─
   symptomId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Symptom",

@@ -1,0 +1,26 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
+kagglehub
+fastapi
+uvicorn
+python-dotenv
+langchain
+langchain-core
+langchain-community
+langchain-groq
+langchain-openai
+langchain-google-genai 
+langchain-deepseek
+langchain-text-splitters
+google-generativeai
+scikit-learn
+pandas
+matplotlib
+numpy==1.26.4
+timm
+ddgs
+streamlit
+config
+fsspec

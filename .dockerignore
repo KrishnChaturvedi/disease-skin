@@ -1,0 +1,11 @@
+dataset/
+data/
+models/
+*.pt
+*.h5
+*.ckpt
+venv/
+.env
+.git
+__pycache__/
+.ipynb_checkpoints
