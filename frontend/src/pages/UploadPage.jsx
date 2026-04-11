@@ -1,24 +1,90 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import ImageUploadCard from '../components/ImageUploadCard'
+import { getScreeningState, saveScreeningState } from '../utils/storage'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function UploadPage() {
+  const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState(null)
-  const [info, setInfo] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState('')
 
   function handleFileChange(event) {
     setSelectedFile(event.target.files?.[0] || null)
-    setInfo('')
+    setError('')
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!selectedFile) return
-    setInfo('Image selected successfully. You can connect backend upload API anytime.')
+
+    // Get symptomId and token saved in the previous step
+    const screeningState = getScreeningState()
+    const symptomId = screeningState?.screeningId
+    const token = localStorage.getItem('skinshield_token')
+
+    if (!symptomId) {
+      setError('Symptom data missing. Please go back and complete the questionnaire.')
+      return
+    }
+    if (!token) {
+      setError('You must be logged in to run a scan. Please log in first.')
+      return
+    }
+
+    setIsUploading(true)
+    setError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('skinImage', selectedFile)   // must match multer field name
+      formData.append('symptomId', symptomId)
+
+      const response = await axios.post(`${API_BASE}/api/scan`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.data.success) {
+        const scan = response.data.scan
+
+        // Save result to local state so ResultPage and ReportPage can read it
+        saveScreeningState({
+          ...screeningState,
+          scanId: scan._id,
+          prediction: {
+            conditionName: scan.mlResult?.disease || 'Unknown',
+            confidence: scan.mlResult?.confidence
+              ? Math.round(scan.mlResult.confidence * 100)
+              : 0,
+            riskLevel: scan.riskLevel || 'low',
+          },
+          pdfUrl: scan.pdfUrl,
+          report: scan.report,
+        })
+
+        navigate('/screening/result')
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Upload failed. Is the backend running?'
+      setError(msg)
+      console.error('Upload error:', err)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-5">
       <div>
-  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
           Step 2 of 2
         </p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">Upload Image</h1>
@@ -27,17 +93,17 @@ function UploadPage() {
         </p>
       </div>
 
-      {info ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-          {info}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <strong>Error:</strong> {error}
         </div>
-      ) : null}
+      )}
 
       <ImageUploadCard
         selectedFile={selectedFile}
         onFileChange={handleFileChange}
         onSubmit={handleSubmit}
-        isUploading={false}
+        isUploading={isUploading}
         canSubmit={Boolean(selectedFile)}
       />
     </div>

@@ -1,24 +1,25 @@
 import { useState, useContext, createContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { saveToken } from '../utils/storage'
 
 // ── Auth Context ──────────────────────────────────────────────────────────────
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user')
+    const saved = localStorage.getItem('skinshield_user')
     return saved ? JSON.parse(saved) : null
   })
 
   function login(userData, token) {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
+    saveToken(token)
+    localStorage.setItem('skinshield_user', JSON.stringify(userData))
     setUser(userData)
   }
 
   function logout() {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    localStorage.removeItem('skinshield_token')
+    localStorage.removeItem('skinshield_user')
     setUser(null)
   }
 
@@ -87,6 +88,7 @@ function AuthPage() {
       }
 
       if (isLogin) {
+        // ✅ This now saves to 'skinshield_token' via saveToken()
         login(data.user, data.token)
         setSuccess('Login successful! Redirecting...')
         setTimeout(() => navigate('/'), 1000)
@@ -111,7 +113,7 @@ function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-violet-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
-        {/* ── Logo ── */}
+        {/* Logo */}
         <div className="text-center mb-8">
           <p className="text-indigo-600 font-semibold text-sm uppercase tracking-widest mb-1">SkinShield AI</p>
           <h1 className="text-3xl font-bold text-slate-900">
@@ -122,10 +124,10 @@ function AuthPage() {
           </p>
         </div>
 
-        {/* ── Card ── */}
+        {/* Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-5">
 
-          {/* ── Toggle ── */}
+          {/* Toggle */}
           <div className="flex rounded-xl border border-slate-200 p-1 bg-slate-50">
             <button
               type="button"
@@ -151,7 +153,7 @@ function AuthPage() {
             </button>
           </div>
 
-          {/* ── Error / Success ── */}
+          {/* Error / Success */}
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
               {error}
@@ -163,7 +165,7 @@ function AuthPage() {
             </div>
           )}
 
-          {/* ── Form ── */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {!isLogin && (
@@ -218,7 +220,7 @@ function AuthPage() {
             </button>
           </form>
 
-          {/* ── Footer toggle ── */}
+          {/* Footer toggle */}
           <p className="text-center text-sm text-slate-500">
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
             <button

@@ -1,12 +1,12 @@
 import ScanModel from "../models/ScanModel.js";
 import { Symptom } from "../models/Symptoms.js";
 import { generateAndUploadPDF } from "../utils/pdfService.js";
-import axios from "axios"; // Added to call Python API
+import axios from "axios";
 
 export const createScan = async (req, res) => {
   try {
-    const imageUrl = req.file.path;         
-    const publicId = req.file.filename;     
+    const imageUrl = req.file.path;
+    const publicId = req.file.filename;
     const { symptomId } = req.body;
 
     if (!symptomId) {
@@ -18,13 +18,12 @@ export const createScan = async (req, res) => {
       return res.status(404).json({ success: false, message: "Symptoms not found in DB." });
     }
 
-    if (userSymptoms.userId && userSymptoms.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "These symptoms do not belong to your account." });
-    }
+    // ✅ Removed the userId ownership check — symptoms don't store userId yet
+    // If you want to add ownership later, save userId in symptomController first
 
     // 1. Create the pending scan
     const scan = await ScanModel.create({
-      user: req.user._id,        
+      user: req.user._id,
       symptomId: symptomId,
       image: {
         url: imageUrl,
@@ -35,9 +34,8 @@ export const createScan = async (req, res) => {
     });
 
     // 2. Call the Python FastAPI Service
-    // 🚨 DOCKER NOTE: If Python is running in Docker, change localhost to your python container name (e.g., http://python-service:8000/analyze)
     const pythonApiUrl = process.env.ML_SERVICE_URL || "http://localhost:8000/analyze";
-    
+
     const mlResponse = await axios.post(pythonApiUrl, {
       imageUrl: imageUrl,
       symptoms: userSymptoms,
@@ -48,23 +46,23 @@ export const createScan = async (req, res) => {
 
     // 3. Save the Python Results
     scan.mlResult = {
-        disease: disease || "Unknown",
-        confidence: confidence || 0,
-        heatmapUrl: "" // Python currently doesn't return this, leave blank
+      disease: disease || "Unknown",
+      confidence: confidence || 0,
+      heatmapUrl: ""
     };
-    scan.report = report; // Save the raw text block from Groq
+    scan.report = report;
 
     // 4. Calculate Risk
     const highRiskDiseases = ["Melanoma", "Basal Cell Carcinoma", "Squamous Cell Carcinoma"];
     const mediumRiskDiseases = ["Psoriasis", "Eczema", "Acne", "Rosacea"];
-    
+
     let calculatedRisk = "low";
     if (highRiskDiseases.includes(scan.mlResult.disease)) {
       calculatedRisk = "high";
     } else if (mediumRiskDiseases.includes(scan.mlResult.disease)) {
       calculatedRisk = "medium";
     }
-    
+
     scan.riskLevel = calculatedRisk;
     scan.status = "report_done";
     await scan.save();
@@ -78,7 +76,7 @@ export const createScan = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Analysis and PDF Generation Complete",
-      scan, 
+      scan,
     });
 
   } catch (error) {

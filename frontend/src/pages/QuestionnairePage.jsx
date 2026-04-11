@@ -1,51 +1,43 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios' // Ensure axios is installed: npm install axios
+import axios from 'axios'
 import SymptomForm from '../components/SymptomForm'
 import { initialSymptoms } from '../constants/symptoms'
 import { saveScreeningState } from '../utils/storage'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function QuestionnairePage() {
   const navigate = useNavigate()
   const [symptoms, setSymptoms] = useState(initialSymptoms)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState(null) // State to display backend errors
+  const [error, setError] = useState(null)
 
-  // Updates local state when user types/selects
   function handleFieldChange(field, value) {
     setSymptoms((prev) => ({ ...prev, [field]: value }))
   }
 
-  // The logic to send data to your MongoDB backend
   async function handleSubmit(event) {
     event.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
     try {
-      // 1. Send data to backend
-      const response = await axios.post('http://localhost:5000/api/submit-symptoms', symptoms)
+      const response = await axios.post(`${API_BASE}/api/submit-symptoms`, symptoms)
 
-      // 2. Check for success based on your backend response structure
       if (response.data.success) {
-        console.log('Saved successfully:', response.data.data)
-
-        // 3. Save state locally (includes the MongoDB _id) for Step 3
+        // Save the MongoDB _id as screeningId so UploadPage can send it
         saveScreeningState({
           symptoms: response.data.data,
           screeningId: response.data.data._id,
         })
-
-        // 4. Move to the next page
         navigate('/screening/upload')
       }
     } catch (err) {
-      // 5. Catch validation errors (like "painLevel is required")
       const errorMessage =
-        err.response?.data?.message || 
-        err.response?.data?.error || 
+        err.response?.data?.message ||
+        err.response?.data?.error ||
         'Server connection failed. Is the backend running?'
-      
       setError(errorMessage)
       console.error('Submission Error:', err)
     } finally {
@@ -65,7 +57,6 @@ function QuestionnairePage() {
         </p>
       </div>
 
-      {/* Error Alert: This will show the "painLevel is required" message to the user */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <strong>Error:</strong> {error}
