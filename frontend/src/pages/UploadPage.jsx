@@ -59,8 +59,8 @@ function UploadPage() {
           prediction: {
             conditionName: scan.mlResult?.disease || 'Unknown',
             confidence: scan.mlResult?.confidence
-              ? Math.round(scan.mlResult.confidence * 100)
-              : 0,
+            ? Math.round(scan.mlResult.confidence) 
+             : 0,
             riskLevel: scan.riskLevel || 'low',
           },
           pdfUrl: scan.pdfUrl,

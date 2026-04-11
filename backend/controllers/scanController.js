@@ -34,7 +34,7 @@ export const createScan = async (req, res) => {
     });
 
     // 2. Call the Python FastAPI Service
-    const pythonApiUrl = process.env.ML_SERVICE_URL || "http://localhost:8000/analyze";
+   const pythonApiUrl = process.env.ML_SERVICE_URL || "http://ml:8000/analyze";
 
     const mlResponse = await axios.post(pythonApiUrl, {
       imageUrl: imageUrl,
