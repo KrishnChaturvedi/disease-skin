@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import ImageUploadCard from '../components/ImageUploadCard'
-// ADDED addToHistory to the import below
 import { getScreeningState, saveScreeningState, addToHistory } from '../utils/storage'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function UploadPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation() // ✅ Extracted i18n here
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
@@ -43,6 +42,10 @@ function UploadPage() {
       const formData = new FormData()
       formData.append('skinImage', selectedFile)
       formData.append('symptomId', symptomId)
+      
+      // ✅ NEW: Tell the backend which language the user has selected
+      const userLang = i18n.language?.startsWith('hi') ? 'Hindi' : 'English'
+      formData.append('language', userLang)
 
       const response = await axios.post(`${API_BASE}/api/scan`, formData, {
         headers: {
@@ -54,7 +57,7 @@ function UploadPage() {
       if (response.data.success) {
         const scan = response.data.scan
         
-        // --- NEW: SAVE TO HISTORY BEFORE NAVIGATING ---
+        // --- SAVE TO HISTORY BEFORE NAVIGATING ---
         addToHistory({
           scanId: scan._id,
           disease: scan.mlResult?.disease || 'Unknown',

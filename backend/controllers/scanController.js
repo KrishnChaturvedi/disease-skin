@@ -7,7 +7,8 @@ export const createScan = async (req, res) => {
   try {
     const imageUrl = req.file.path;
     const publicId = req.file.filename;
-    const { symptomId } = req.body;
+    // ✅ Extract language from req.body
+    const { symptomId, language } = req.body;
 
     if (!symptomId) {
       return res.status(400).json({ success: false, message: "symptomId is required." });
@@ -36,7 +37,9 @@ export const createScan = async (req, res) => {
     const mlResponse = await axios.post(pythonApiUrl, {
       imageUrl: imageUrl,
       symptoms: userSymptoms,
-      scanId: scan._id.toString()
+      scanId: scan._id.toString(),
+      // ✅ Pass language to Python (default to English if missing)
+      language: language || "English" 
     });
 
     const { disease, confidence, report } = mlResponse.data;
@@ -95,10 +98,8 @@ export const createScan = async (req, res) => {
   }
 };
 
-// ✅ NEW: Fetch history from MongoDB
 export const getUserHistory = async (req, res) => {
   try {
-    // Find all scans for the logged-in user, sorted newest first
     const history = await ScanModel.find({ user: req.user._id }).sort({ createdAt: -1 });
     
     res.status(200).json({

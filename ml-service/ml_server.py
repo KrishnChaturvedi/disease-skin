@@ -22,10 +22,9 @@ from core.tools.search_tool import duck_search_tool
 
 app = FastAPI(title="SkinShield ML Service")
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5000"],  # Node.js backend
+    allow_origins=["http://localhost:5000"],
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
@@ -61,16 +60,16 @@ chatbot_agent = create_agent(
 print("Chatbot ready!")
 
 class ScanRequest(BaseModel):
-    imageUrl: str       # Cloudinary URL
-    symptoms: dict      # symptom fields from MongoDB
-    scanId: str         # MongoDB scan _id (used as session_id)
+    imageUrl: str       
+    symptoms: dict      
+    scanId: str         
+    language: str = "English" # ✅ Added language to model
 
 class ChatRequest(BaseModel):
-    message: str        # user's message
-    sessionId: str      # unique session per user (e.g. userId from MongoDB)
+    message: str        
+    sessionId: str      
 
 def download_image(url: str) -> str:
-    """Download image from Cloudinary to a temp file."""
     response = requests.get(url, timeout=10)
     if response.status_code != 200:
         raise HTTPException(status_code=400, detail="Failed to download image from Cloudinary")
@@ -82,8 +81,7 @@ def download_image(url: str) -> str:
     return tmp.name
 
 
-def build_scan_prompt(symptoms: dict, image_path: str) -> str:
-    """Build the prompt for the scan analyzer agent."""
+def build_scan_prompt(symptoms: dict, image_path: str, language: str) -> str:
     return f"""
             Patient Questionnaire Answers:
             - Age: {symptoms.get('age', 'N/A')}
@@ -98,11 +96,16 @@ def build_scan_prompt(symptoms: dict, image_path: str) -> str:
             {image_path}
 
             Please analyze the image using the skin_condition_classifier tool, then generate a full dermatology report using the questionnaire answers and classification result.
+            
+            CRITICAL INSTRUCTIONS FOR OUTPUT:
+            1. You MUST write the ENTIRE final report EXCLUSIVELY in {language}. 
+            2. DO NOT include any internal thought processes, planning steps, or meta-commentary (e.g., do NOT write "The user wants...", "Here is the report...", or "Now I will translate...").
+            3. DO NOT provide English translations or English words in brackets next to the {language} words. Use 100% {language}.
+            4. Start your response IMMEDIATELY with the report title in {language}, nothing else before it.
+            5. Structure the report professionally with clear headings.
             """
 
-
 def parse_ml_result(messages: list) -> tuple:
-    """Extract disease name and confidence from agent messages."""
     disease = "Unknown"
     confidence = 0.0
 
@@ -134,7 +137,8 @@ async def analyze_skin(request: ScanRequest):
     try:
         tmp_path = download_image(request.imageUrl)
 
-        prompt = build_scan_prompt(request.symptoms, tmp_path)
+        # ✅ Pass language to the prompt builder
+        prompt = build_scan_prompt(request.symptoms, tmp_path, request.language)
 
         response = analyzer_agent.invoke(
             {"messages": [{"role": "user", "content": prompt}]},
