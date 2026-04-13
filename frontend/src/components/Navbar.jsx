@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AuthContext } from '../pages/AuthPage'
@@ -8,18 +8,32 @@ function Navbar() {
   const navigate = useNavigate()
   const { user, logout } = useContext(AuthContext)
   const { t, i18n } = useTranslation()
+  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
 
   function handleLogout() {
     logout()
     clearToken()
     clearScreeningState()
+    setIsDropdownOpen(false)
     navigate('/auth')
   }
 
   function toggleLanguage() {
-    const next = i18n.language.startsWith('hi') ? 'en' : 'hi'
+    const next = i18n.language?.startsWith('hi') ? 'en' : 'hi'
     i18n.changeLanguage(next)
   }
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
@@ -34,63 +48,120 @@ function Navbar() {
         <nav className="flex flex-wrap items-center justify-end gap-2 text-sm font-medium">
           <Link
             to="/"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
+            className="rounded-full border border-transparent px-4 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
-            {t('home')}
+            {t('home', 'Home')}
           </Link>
           <Link
             to="/about"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
+            className="rounded-full border border-transparent px-4 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
-            {t('about')}
+            {t('about', 'About')}
           </Link>
           <Link
             to="/contact"
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
+            className="rounded-full border border-transparent px-4 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
-            {t('contact')}
+            {t('contact', 'Contact Us')}
           </Link>
 
-          {/* ✅ Language toggle button */}
-          <button
-            onClick={toggleLanguage}
-            className="rounded-full border border-indigo-300 px-4 py-1.5 text-indigo-600 text-sm font-semibold transition hover:bg-indigo-50"
-          >
-            {i18n.language.startsWith('hi') ? 'EN' : 'हिंदी'}
-          </button>
+          {!user && (
+            <button
+              onClick={toggleLanguage}
+              className="ml-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+            >
+              {i18n.language?.startsWith('hi') ? 'English' : 'हिंदी'}
+            </button>
+          )}
 
           {user ? (
-            <>
-              {/* NEW: History Link added here */}
-              <Link
-                to="/history"
-                className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
-              >
-                {t('history', 'History')}
-              </Link>
-              
+            <div className="ml-4 flex items-center gap-3">
               <Link
                 to="/screening/questionnaire"
-                className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"
+                className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:brightness-110"
               >
-                {t('start_screening')}
+                {t('start_screening', 'Start Screening')}
               </Link>
-              <span className="hidden text-xs text-slate-500 sm:inline">
-                {t('hi_user')}, {user.name}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-rose-400 hover:text-rose-600"
-              >
-                {t('logout')}
-              </button>
-            </>
+
+              {/* USER PROFILE DROPDOWN */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`flex items-center gap-2 rounded-full border pl-1.5 pr-3 py-1.5 transition-all duration-200 ${
+                    isDropdownOpen 
+                      ? 'border-indigo-300 bg-indigo-50 text-indigo-800' 
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {/* CIRCULAR PROFILE PIC (Uses first letter of name) */}
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+
+                  <span className="max-w-[100px] truncate text-sm font-medium">
+                    {user.name}
+                  </span>
+                  <svg 
+                    className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-indigo-500' : ''}`} 
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu Panel */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-900/5 focus:outline-none">
+                    
+                    {/* Header */}
+                    <div className="mb-2 border-b border-slate-100 px-3 pb-2 pt-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {t('account', 'Account Settings')}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Link
+                        to="/history"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+                      >
+                        {t('history', 'Scan History')}
+                      </Link>
+                      
+                      <button
+                        onClick={() => {
+                          toggleLanguage()
+                          setIsDropdownOpen(false)
+                        }}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+                      >
+                        <span>{t('change_language', 'Language')}</span>
+                        {/* CHANGED TO हिंदी */}
+                        <span className="rounded-md bg-white px-2 py-0.5 text-xs font-bold text-indigo-600 shadow-sm ring-1 ring-slate-200">
+                          {i18n.language?.startsWith('hi') ? 'EN' : 'हिंदी'}
+                        </span>
+                      </button>
+                      
+                      <div className="my-1 h-px w-full bg-slate-100" />
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                      >
+                        {t('logout', 'Logout')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             <Link
               to="/auth"
-              className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"
+              className="ml-2 rounded-full bg-slate-900 px-5 py-1.5 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              {t('login_register')}
+              {t('login_register', 'Log In')}
             </Link>
           )}
         </nav>
