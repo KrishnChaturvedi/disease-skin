@@ -4,38 +4,34 @@ import { useTranslation } from 'react-i18next'
 import RiskBadge from '../components/RiskBadge'
 import { getScreeningState } from '../utils/storage'
 
-// ── Map disease names to Practo specialist search URLs ──────────────────────
-// Practo search URL format:
-// https://www.practo.com/search/doctors?results_type=doctor&q=<specialty>&city=<city>
-const DISEASE_TO_PRACTO = {
-  // High risk — skin cancer specialists
-  'Melanoma':                  'Dermatologist+Skin+Cancer',
-  'Basal Cell Carcinoma':      'Dermatologist+Skin+Cancer',
-  'Squamous Cell Carcinoma':   'Dermatologist+Skin+Cancer',
+// ── Correct Practo URL format: practo.com/{city}/dermatologist?symptoms={disease}
+// Verified working format from Practo website
+function getPractoUrl(diseaseName, city = 'delhi') {
+  const citySlug = city.toLowerCase().replace(/\s+/g, '-')
 
-  // Medium risk — general dermatologists
-  'Psoriasis':                 'Dermatologist+Psoriasis',
-  'Eczema':                    'Dermatologist+Eczema',
-  'Acne':                      'Dermatologist+Acne',
-  'Rosacea':                   'Dermatologist+Rosacea',
+  // Map disease to Practo symptom search term
+  const diseaseToSymptom = {
+    'Melanoma':                   'skin-cancer',
+    'Basal Cell Carcinoma':       'skin-cancer',
+    'Squamous Cell Carcinoma':    'skin-cancer',
+    'Psoriasis':                  'psoriasis',
+    'Eczema':                     'eczema',
+    'Acne':                       'acne',
+    'Rosacea':                    'rosacea',
+    'Actinic Keratosis':          'skin-rash',
+    'Vasculitis':                 'skin-rash',
+    'Vitiligo':                   'vitiligo',
+    'Tinea Ringworm Candidiasis': 'fungal-infection',
+    'Urticaria Hives':            'itching',
+    'Nail Fungus':                'nail-problems',
+    'Chickenpox':                 'skin-rash',
+    'Warts Molluscum':            'warts',
+  }
 
-  // Other conditions
-  'Actinic Keratosis':         'Dermatologist+Actinic+Keratosis',
-  'Vasculitis':                'Dermatologist+Vasculitis',
-  'Vitiligo':                  'Dermatologist+Vitiligo',
-  'Tinea Ringworm Candidiasis': 'Dermatologist+Fungal+Infection',
-  'Urticaria Hives':           'Dermatologist+Allergy',
-  'Seborrheic Keratoses':      'Dermatologist',
-  'Warts Molluscum':           'Dermatologist+Warts',
-  'Nail Fungus':               'Dermatologist+Nail+Fungus',
-  'Chickenpox':                'Dermatologist+Chickenpox',
-  'Monkeypox':                 'Dermatologist+Infectious+Disease',
-}
+  const symptom = diseaseToSymptom[diseaseName] || 'skin-rash'
 
-// Build Practo URL for a given disease and city
-function getPractoUrl(diseaseName, city = 'Delhi') {
-  const specialty = DISEASE_TO_PRACTO[diseaseName] || 'Dermatologist'
-  return `https://www.practo.com/search/doctors?results_type=doctor&q=${specialty}&city=${encodeURIComponent(city)}`
+  // Correct working URL format
+  return `https://www.practo.com/${citySlug}/dermatologist?symptoms=${symptom}`
 }
 
 function ResultPage() {
@@ -49,7 +45,6 @@ function ResultPage() {
   const diseaseName = prediction?.conditionName || 'Unknown'
   const riskLevel = prediction?.riskLevel || 'low'
 
-  // ── Find nearby dermatologist using real GPS coords ──────────────────────
   function findNearbyDermatologist() {
     setLocationError('')
     setLocating(true)
@@ -90,7 +85,6 @@ function ResultPage() {
   }
 
   const isHighRisk = riskLevel === 'high'
-  const isMediumOrHighRisk = riskLevel === 'high' || riskLevel === 'medium'
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
@@ -108,7 +102,7 @@ function ResultPage() {
         </p>
       </section>
 
-      {/* ── High risk urgent banner + Practo button ── */}
+      {/* ── High risk urgent banner ── */}
       {isHighRisk && (
         <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 space-y-3">
           <div className="flex items-start gap-3">
@@ -120,26 +114,21 @@ function ResultPage() {
                 High risk detected — please consult a specialist soon
               </p>
               <p className="mt-1 text-xs text-rose-700 leading-relaxed">
-                Our AI has detected <strong>{diseaseName}</strong> with high risk indicators.
-                This condition requires professional medical evaluation. We recommend booking
-                a dermatologist appointment as soon as possible.
+                Our AI detected <strong>{diseaseName}</strong> with high risk indicators.
+                Please book a dermatologist appointment as soon as possible.
               </p>
             </div>
           </div>
-
-          {/* ── Practo button — disease specific ── */}
           <a
             href={getPractoUrl(diseaseName)}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-center gap-2 w-full rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700"
           >
-            <span>Consult a {diseaseName} Specialist on Practo</span>
-            <span style={{fontSize:'12px'}}>↗</span>
+            Book a {diseaseName} Specialist on Practo ↗
           </a>
-
           <p className="text-xs text-rose-600 text-center">
-            Opens Practo with dermatologists experienced in {diseaseName} treatment
+            Opens Practo showing dermatologists for {diseaseName} in Delhi
           </p>
         </section>
       )}
@@ -151,18 +140,16 @@ function ResultPage() {
             Medium risk — a dermatologist check is recommended
           </p>
           <p className="text-xs text-amber-700 leading-relaxed">
-            Our AI flagged <strong>{diseaseName}</strong> as a medium risk condition.
-            While not urgent, we recommend scheduling a dermatologist consultation
-            within the next 1–2 weeks.
+            Our AI flagged <strong>{diseaseName}</strong> as medium risk.
+            We recommend a dermatologist visit within the next 1–2 weeks.
           </p>
-
           <a
             href={getPractoUrl(diseaseName)}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-center gap-2 w-full rounded-xl border border-amber-400 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100"
           >
-            Book a {diseaseName} Dermatologist on Practo ↗
+            Book a Dermatologist on Practo ↗
           </a>
         </section>
       )}
@@ -172,7 +159,7 @@ function ResultPage() {
         {t('disclaimer')}
       </div>
 
-      {/* ── Report text preview ── */}
+      {/* ── Report preview ── */}
       {screeningState?.report && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-base font-semibold text-slate-900 mb-3">{t('ai_analysis')}</h2>
@@ -201,7 +188,6 @@ function ResultPage() {
             {t('download_pdf')}
           </a>
         )}
-
         <a
           href="https://esanjeevani.mohfw.gov.in/"
           target="_blank"
@@ -210,7 +196,6 @@ function ResultPage() {
         >
           {t('consult_esanjeevani')}
         </a>
-
         <button
           type="button"
           onClick={findNearbyDermatologist}
@@ -219,7 +204,6 @@ function ResultPage() {
         >
           {locating ? 'Getting your location...' : t('find_hospital')}
         </button>
-
         <Link
           to="/screening/questionnaire"
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
@@ -232,4 +216,5 @@ function ResultPage() {
 }
 
 export default ResultPage
+
 
