@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import ImageUploadCard from '../components/ImageUploadCard'
-import { getScreeningState, saveScreeningState } from '../utils/storage'
+// ADDED addToHistory to the import below
+import { getScreeningState, saveScreeningState, addToHistory } from '../utils/storage'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
@@ -52,6 +53,17 @@ function UploadPage() {
 
       if (response.data.success) {
         const scan = response.data.scan
+        
+        // --- NEW: SAVE TO HISTORY BEFORE NAVIGATING ---
+        addToHistory({
+          scanId: scan._id,
+          disease: scan.mlResult?.disease || 'Unknown',
+          confidence: scan.mlResult?.confidence ? Math.round(scan.mlResult.confidence) : 0,
+          riskLevel: scan.riskLevel || 'low',
+          pdfUrl: scan.pdfUrl
+        })
+        // ----------------------------------------------
+
         saveScreeningState({
           ...screeningState,
           scanId: scan._id,

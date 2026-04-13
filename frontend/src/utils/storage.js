@@ -1,5 +1,6 @@
 const SCREENING_STORAGE_KEY = 'skinshield_screening_state'
 const TOKEN_KEY = 'skinshield_token'
+const HISTORY_KEY = 'skinshield_history' // ADDED
 
 // ── Screening state ──────────────────────────────────────────────────────────
 
@@ -33,4 +34,25 @@ export function getToken() {
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY)
+}
+
+// ── History state (NEW) ──────────────────────────────────────────────────────
+
+export function addToHistory(scanData) {
+  const history = getHistory()
+  history.unshift({
+    ...scanData,
+    date: new Date().toISOString(),
+  })
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+}
+
+export function getHistory() {
+  const raw = localStorage.getItem(HISTORY_KEY)
+  if (!raw) return []
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
 }

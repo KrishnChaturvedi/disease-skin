@@ -61,6 +61,14 @@ function Navbar() {
 
           {user ? (
             <>
+              {/* NEW: History Link added here */}
+              <Link
+                to="/history"
+                className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
+              >
+                {t('history', 'History')}
+              </Link>
+              
               <Link
                 to="/screening/questionnaire"
                 className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"

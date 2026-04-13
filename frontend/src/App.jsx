@@ -10,6 +10,7 @@ import QuestionnairePage from './pages/QuestionnairePage'
 import ReportPage from './pages/ReportPage'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
+import HistoryPage from './pages/HistoryPage' // <--- ADDED IMPORT
 
 function App() {
   return (
@@ -25,6 +26,10 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            
+            {/* ---> ADDED ROUTE HERE <--- */}
+            <Route path="/history" element={<HistoryPage />} />
+
             <Route path="/screening/questionnaire" element={<QuestionnairePage />} />
             <Route path="/screening/upload" element={<UploadPage />} />
             <Route path="/screening/result" element={<ResultPage />} />
