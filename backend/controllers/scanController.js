@@ -41,9 +41,7 @@ export const createScan = async (req, res) => {
 
     const { disease, confidence, report } = mlResponse.data;
 
-    // ✅ ONLY CHANGE — extract plain text from report
-    // FastAPI returns report as an array of content blocks e.g. [{type:'text', text:'...'}]
-    // MongoDB expects a plain string so we extract and join the text blocks
+    // extract plain text from report
     const reportText = Array.isArray(report)
       ? report
           .filter(item => item.type === 'text')
@@ -92,6 +90,26 @@ export const createScan = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ NEW: Fetch history from MongoDB
+export const getUserHistory = async (req, res) => {
+  try {
+    // Find all scans for the logged-in user, sorted newest first
+    const history = await ScanModel.find({ user: req.user._id }).sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      success: true,
+      history,
+    });
+  } catch (error) {
+    console.error("History fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch history",
       error: error.message,
     });
   }
