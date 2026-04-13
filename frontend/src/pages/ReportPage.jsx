@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Loader from '../components/Loader'
 import ReportSection from '../components/ReportSection'
 import { getReportByScreeningId } from '../services/api'
 
 function ReportPage() {
   const { screeningId } = useParams()
+  const { t } = useTranslation()
   const [report, setReport] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -18,20 +20,17 @@ function ReportPage() {
         const data = await getReportByScreeningId(screeningId)
         if (!ignore) setReport(data)
       } catch {
-        if (!ignore) setError('Could not load report. Please retry later.')
+        if (!ignore) setError(t('report_error'))
       } finally {
         if (!ignore) setIsLoading(false)
       }
     }
 
     fetchReport()
+    return () => { ignore = true }
+  }, [screeningId, t])
 
-    return () => {
-      ignore = true
-    }
-  }, [screeningId])
-
-  if (isLoading) return <Loader label="Loading your report..." />
+  if (isLoading) return <Loader label={t('report_loading')} />
 
   if (error) {
     return (
@@ -43,7 +42,7 @@ function ReportPage() {
           to="/screening/questionnaire"
           className="inline-flex rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-400/40"
         >
-          Start New Screening
+          {t('new_screening_btn')}
         </Link>
       </div>
     )
@@ -51,11 +50,11 @@ function ReportPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4">
-      <h1 className="text-3xl font-bold text-slate-900">AI Triage Report</h1>
+      <h1 className="text-3xl font-bold text-slate-900">{t('report_title')}</h1>
 
-      <ReportSection title="What was detected?" content={report?.summary} />
-      <ReportSection title="What could this indicate?" content={report?.interpretation} />
-      <ReportSection title="Recommended next step" content={report?.nextSteps} />
+      <ReportSection title={t('report_detected')} content={report?.summary} />
+      <ReportSection title={t('report_indicate')} content={report?.interpretation} />
+      <ReportSection title={t('report_next')} content={report?.nextSteps} />
 
       <div className="flex flex-wrap gap-3">
         <a
@@ -64,15 +63,15 @@ function ReportPage() {
           rel="noreferrer"
           className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-400/40 transition hover:brightness-110"
         >
-          Consult on eSanjeevani
+          {t('consult_esanjeevani')}
         </a>
         <a
-          href={`https://www.google.com/maps/search/hospital+near+me`}
+          href="https://www.google.com/maps/search/hospital+near+me"
           target="_blank"
           rel="noreferrer"
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
         >
-          Find Nearby Hospital
+          {t('find_hospital')}
         </a>
       </div>
     </div>
@@ -80,3 +79,4 @@ function ReportPage() {
 }
 
 export default ReportPage
+

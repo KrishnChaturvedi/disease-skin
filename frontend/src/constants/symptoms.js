@@ -1,52 +1,81 @@
-export const symptomQuestions = [
-  {
-    key: 'age',
-    label: 'What is your age?',
-    type: 'number',
-    min: 1,
-    max: 120,
-    placeholder: 'e.g. 25',
-  },
-  {
-    key: 'durationDays',
-    label: 'How many days has this been present?',
-    type: 'number',
-    min: 1,
-    max: 3650,
-    placeholder: 'e.g. 14',
-  },
-  {
-    key: 'evolution',
-    label: 'Has the spot changed in size, shape, or color?',
-    type: 'select',
-    options: ['No change', 'Growing larger', 'Changing color', 'Becoming irregular'],
-  },
-  {
-    key: 'itchingLevel',
-    label: 'Itching level',
-    type: 'select',
-    options: ['None', 'Mild', 'Moderate', 'Severe'],
-  },
-  {
-    key: 'physicalChanges',
-    label: 'Physical symptoms (if any)',
-    type: 'select',
-    options: ['None', 'Bleeding', 'Crusting/Scabbing', 'Painful'],
-  },
-  {
-    key: 'sunExposure',
-    label: 'Daily sun exposure level',
-    type: 'select',
-    options: ['Low (Mostly indoors)', 'Medium (Commute/Short walks)', 'High (Outdoor work/Sports)'],
-  },
-  {
-    key: 'familyHistory',
-    label: 'Family history of skin disease/cancer',
-    type: 'select',
-    options: ['No', 'Yes', 'Not sure'],
-  },
-]
+// getSymptomQuestions takes the t() function and returns translated questions
+// This is called inside SymptomForm so it re-renders when language changes
+export function getSymptomQuestions(t) {
+  return [
+    {
+      key: 'age',
+      label: t('q_age'),
+      type: 'number',
+      min: 1,
+      max: 120,
+      placeholder: 'e.g. 25',
+    },
+    {
+      key: 'durationDays',
+      label: t('q_duration'),
+      type: 'number',
+      min: 1,
+      max: 3650,
+      placeholder: 'e.g. 14',
+    },
+    {
+      key: 'evolution',
+      label: t('q_evolution'),
+      type: 'select',
+      options: [
+        { value: 'No change',           label: t('evo_no_change') },
+        { value: 'Growing larger',      label: t('evo_growing') },
+        { value: 'Changing color',      label: t('evo_color') },
+        { value: 'Becoming irregular',  label: t('evo_irregular') },
+      ],
+    },
+    {
+      key: 'itchingLevel',
+      label: t('q_itching'),
+      type: 'select',
+      options: [
+        { value: 'None',     label: t('opt_none') },
+        { value: 'Mild',     label: t('itch_mild') },
+        { value: 'Moderate', label: t('itch_moderate') },
+        { value: 'Severe',   label: t('itch_severe') },
+      ],
+    },
+    {
+      key: 'physicalChanges',
+      label: t('q_physical'),
+      type: 'select',
+      options: [
+        { value: 'None',              label: t('opt_none') },
+        { value: 'Bleeding',          label: t('phys_bleeding') },
+        { value: 'Crusting/Scabbing', label: t('phys_crusting') },
+        { value: 'Painful',           label: t('phys_painful') },
+      ],
+    },
+    {
+      key: 'sunExposure',
+      label: t('q_sun'),
+      type: 'select',
+      options: [
+        { value: 'Low (Mostly indoors)',            label: t('sun_low') },
+        { value: 'Medium (Commute/Short walks)',    label: t('sun_medium') },
+        { value: 'High (Outdoor work/Sports)',      label: t('sun_high') },
+      ],
+    },
+    {
+      key: 'familyHistory',
+      label: t('q_family'),
+      type: 'select',
+      options: [
+        { value: 'No',       label: t('opt_no') },
+        { value: 'Yes',      label: t('opt_yes') },
+        { value: 'Not sure', label: t('opt_not_sure') },
+      ],
+    },
+  ]
+}
 
+// Keep initialSymptoms — values sent to backend stay in English
+// Only labels change, not the actual stored values
 export const initialSymptoms = {
   age: '',
   durationDays: '',

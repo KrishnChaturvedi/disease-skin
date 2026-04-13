@@ -1,6 +1,10 @@
-import { symptomQuestions } from '../constants/symptoms'
+import { useTranslation } from 'react-i18next'
+import { getSymptomQuestions } from '../constants/symptoms'
 
 function SymptomForm({ values, onChange, onSubmit, isSubmitting }) {
+  const { t } = useTranslation()
+  const symptomQuestions = getSymptomQuestions(t)
+
   return (
     <form
       onSubmit={onSubmit}
@@ -17,8 +21,8 @@ function SymptomForm({ values, onChange, onSubmit, isSubmitting }) {
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none ring-indigo-200 transition placeholder:text-slate-400 focus:ring-2"
             >
               {question.options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -42,7 +46,7 @@ function SymptomForm({ values, onChange, onSubmit, isSubmitting }) {
         disabled={isSubmitting}
         className="w-full rounded-xl bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-indigo-400/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSubmitting ? 'Saving symptoms...' : 'Continue to Image Upload'}
+        {isSubmitting ? t('saving_symptoms') : t('continue_upload')}
       </button>
     </form>
   )

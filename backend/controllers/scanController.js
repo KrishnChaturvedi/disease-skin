@@ -18,9 +18,6 @@ export const createScan = async (req, res) => {
       return res.status(404).json({ success: false, message: "Symptoms not found in DB." });
     }
 
-    // ✅ Removed the userId ownership check — symptoms don't store userId yet
-    // If you want to add ownership later, save userId in symptomController first
-
     // 1. Create the pending scan
     const scan = await ScanModel.create({
       user: req.user._id,
@@ -34,7 +31,7 @@ export const createScan = async (req, res) => {
     });
 
     // 2. Call the Python FastAPI Service
-   const pythonApiUrl = process.env.ML_SERVICE_URL || "http://ml:8000/analyze";
+    const pythonApiUrl = process.env.ML_SERVICE_URL || "http://ml:8000/analyze";
 
     const mlResponse = await axios.post(pythonApiUrl, {
       imageUrl: imageUrl,
@@ -44,13 +41,24 @@ export const createScan = async (req, res) => {
 
     const { disease, confidence, report } = mlResponse.data;
 
+    // ✅ ONLY CHANGE — extract plain text from report
+    // FastAPI returns report as an array of content blocks e.g. [{type:'text', text:'...'}]
+    // MongoDB expects a plain string so we extract and join the text blocks
+    const reportText = Array.isArray(report)
+      ? report
+          .filter(item => item.type === 'text')
+          .map(item => item.text || '')
+          .join('\n')
+          .trim()
+      : (typeof report === 'string' ? report : JSON.stringify(report));
+
     // 3. Save the Python Results
     scan.mlResult = {
       disease: disease || "Unknown",
       confidence: confidence || 0,
       heatmapUrl: ""
     };
-    scan.report = report;
+    scan.report = reportText;
 
     // 4. Calculate Risk
     const highRiskDiseases = ["Melanoma", "Basal Cell Carcinoma", "Squamous Cell Carcinoma"];

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function ImageUploadCard({
   selectedFile,
@@ -7,6 +8,7 @@ function ImageUploadCard({
   isUploading,
   canSubmit,
 }) {
+  const { t } = useTranslation()
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
@@ -36,9 +38,7 @@ function ImageUploadCard({
       streamRef.current = stream
       setIsCameraOpen(true)
     } catch {
-      setCameraError(
-        'Unable to access camera. Allow camera permission, or use file upload.',
-      )
+      setCameraError(t('camera_error'))
     }
   }
 
@@ -81,10 +81,8 @@ function ImageUploadCard({
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-900">Upload Skin Image</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        Upload a clear smartphone image of the affected skin area.
-      </p>
+      <h2 className="text-lg font-semibold text-slate-900">{t('card_upload_title')}</h2>
+      <p className="mt-1 text-sm text-slate-600">{t('card_upload_desc')}</p>
 
       <input
         type="file"
@@ -93,18 +91,17 @@ function ImageUploadCard({
         className="mt-4 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:font-medium file:text-white"
       />
 
-      <p className="mt-4 text-sm font-medium text-slate-700">Or capture live photo</p>
+      <p className="mt-4 text-sm font-medium text-slate-700">{t('or_capture')}</p>
       <button
         type="button"
         onClick={startLiveCamera}
         className="mt-2 inline-flex rounded-full border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
       >
-        📹 Start Live Camera
+        {t('start_camera')}
       </button>
 
-      <p className="mt-2 text-xs text-slate-500">
-        Camera opens on supported mobile browsers. On desktop, this may open file picker.
-      </p>
+      <p className="mt-2 text-xs text-slate-500">{t('camera_note')}</p>
+
       {cameraError ? (
         <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
           {cameraError}
@@ -126,14 +123,14 @@ function ImageUploadCard({
               onClick={captureFromLiveCamera}
               className="inline-flex rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white"
             >
-              📸 Capture Photo
+              {t('capture_photo')}
             </button>
             <button
               type="button"
               onClick={closeLiveCamera}
               className="inline-flex rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
             >
-              Close Camera
+              {t('close_camera')}
             </button>
           </div>
         </div>
@@ -141,7 +138,7 @@ function ImageUploadCard({
 
       {selectedFile ? (
         <p className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-700">
-          Selected: {selectedFile.name}
+          {t('selected_file')}: {selectedFile.name}
         </p>
       ) : null}
 
@@ -149,12 +146,13 @@ function ImageUploadCard({
         type="button"
         onClick={onSubmit}
         disabled={!canSubmit || isUploading}
-  className="mt-5 w-full rounded-xl bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-indigo-400/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 w-full rounded-xl bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-indigo-400/40 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isUploading ? 'Uploading and analyzing...' : 'Run AI Screening'}
+        {isUploading ? t('uploading') : t('run_ai')}
       </button>
     </section>
   )
 }
 
 export default ImageUploadCard
+

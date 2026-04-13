@@ -1,17 +1,24 @@
 import { useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthContext } from '../pages/AuthPage'
 import { clearToken, clearScreeningState } from '../utils/storage'
 
 function Navbar() {
   const navigate = useNavigate()
   const { user, logout } = useContext(AuthContext)
+  const { t, i18n } = useTranslation()
 
   function handleLogout() {
     logout()
     clearToken()
     clearScreeningState()
     navigate('/auth')
+  }
+
+  function toggleLanguage() {
+    const next = i18n.language.startsWith('hi') ? 'en' : 'hi'
+    i18n.changeLanguage(next)
   }
 
   return (
@@ -29,20 +36,28 @@ function Navbar() {
             to="/"
             className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
           >
-            Home
+            {t('home')}
           </Link>
           <Link
             to="/about"
             className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
           >
-            About
+            {t('about')}
           </Link>
           <Link
             to="/contact"
             className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-indigo-400 hover:text-indigo-700"
           >
-            Contact Us
+            {t('contact')}
           </Link>
+
+          {/* ✅ Language toggle button */}
+          <button
+            onClick={toggleLanguage}
+            className="rounded-full border border-indigo-300 px-4 py-1.5 text-indigo-600 text-sm font-semibold transition hover:bg-indigo-50"
+          >
+            {i18n.language.startsWith('hi') ? 'EN' : 'हिंदी'}
+          </button>
 
           {user ? (
             <>
@@ -50,16 +65,16 @@ function Navbar() {
                 to="/screening/questionnaire"
                 className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"
               >
-                Start Screening
+                {t('start_screening')}
               </Link>
               <span className="hidden text-xs text-slate-500 sm:inline">
-                Hi, {user.name}
+                {t('hi_user')}, {user.name}
               </span>
               <button
                 onClick={handleLogout}
                 className="rounded-full border border-slate-300 px-4 py-1.5 text-slate-700 transition hover:border-rose-400 hover:text-rose-600"
               >
-                Logout
+                {t('logout')}
               </button>
             </>
           ) : (
@@ -67,7 +82,7 @@ function Navbar() {
               to="/auth"
               className="rounded-full bg-linear-to-r from-indigo-600 to-violet-500 px-4 py-1.5 text-white shadow-lg shadow-indigo-600/30 transition hover:brightness-110"
             >
-              Login / Register
+              {t('login_register')}
             </Link>
           )}
         </nav>

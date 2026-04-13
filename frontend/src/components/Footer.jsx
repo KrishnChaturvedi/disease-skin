@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 function Footer() {
+  const { t } = useTranslation()
+
   return (
     <footer className="relative z-10 mt-24 border-t border-slate-200 bg-white/80">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 pb-8 pt-14 sm:px-6 lg:grid-cols-3 lg:px-8">
@@ -9,47 +12,47 @@ function Footer() {
             SkinShield AI
           </h3>
           <p className="mt-2 text-sm text-slate-600">
-            Early screening support for skin health awareness and quick next-step guidance.
+            {t('footer_desc')}
           </p>
         </div>
 
         <div>
           <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-            Quick Links
+            {t('footer_quick_links')}
           </h4>
           <div className="mt-3 flex flex-col gap-2 text-sm">
             <Link to="/" className="text-slate-600 transition hover:text-indigo-600">
-              Home
+              {t('home')}
             </Link>
             <Link to="/about" className="text-slate-600 transition hover:text-indigo-600">
-              About
+              {t('about')}
             </Link>
             <Link to="/contact" className="text-slate-600 transition hover:text-indigo-600">
-              Contact Us
+              {t('contact')}
             </Link>
             <Link
               to="/screening/questionnaire"
               className="text-slate-600 transition hover:text-indigo-600"
             >
-              Start Screening
+              {t('start_screening')}
             </Link>
           </div>
         </div>
 
         <div>
           <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-            Contact
+            {t('footer_contact')}
           </h4>
           <p className="mt-3 text-sm text-slate-600">support@skinshield.ai</p>
           <p className="mt-1 text-sm text-slate-600">+91 90000 00000</p>
           <p className="mt-4 text-xs text-slate-500">
-            SkinShield is an early screening platform and not a final diagnosis.
+            {t('footer_disclaimer')}
           </p>
         </div>
       </div>
       <div className="border-t border-slate-200">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 text-xs text-slate-500 sm:px-6 lg:px-8">
-          <p>Built for awareness, speed, and accessibility.</p>
+          <p>{t('footer_tagline')}</p>
           <p>© {new Date().getFullYear()} SkinShield</p>
         </div>
       </div>
@@ -58,3 +61,4 @@ function Footer() {
 }
 
 export default Footer
+
