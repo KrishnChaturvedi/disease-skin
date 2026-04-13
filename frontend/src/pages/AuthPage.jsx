@@ -88,17 +88,14 @@ function AuthPage() {
       }
 
       if (isLogin) {
-        // ✅ This now saves to 'skinshield_token' via saveToken()
         login(data.user, data.token)
         setSuccess('Login successful! Redirecting...')
         setTimeout(() => navigate('/'), 1000)
       } else {
-        setSuccess('Account created! Please login.')
-        setTimeout(() => {
-          setIsLogin(true)
-          setForm({ name: '', email: '', password: '' })
-          setSuccess('')
-        }, 1500)
+        // ✅ NEW FIX: Immediately log the user in after registration and redirect!
+        login(data.user, data.token)
+        setSuccess('Account created successfully! Redirecting...')
+        setTimeout(() => navigate('/'), 1000)
       }
 
     } catch (err) {

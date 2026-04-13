@@ -3,16 +3,13 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import RiskBadge from '../components/RiskBadge'
 import { getScreeningState } from '../utils/storage'
+import Chatbot from '../components/Chatbot'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Practo URL builder
 // ─────────────────────────────────────────────────────────────────────────────
 function getPractoUrl(diseaseName, city = 'delhi') {
   const citySlug = city.toLowerCase().replace(/\s+/g, '-')
-
-  // Maps disease → Practo treatment slug
-  // URL format: practo.com/{city}/doctors-for-{slug}-treatment
-  // This shows doctors who specifically treat that condition, not a generic dermatologist list.
   const diseaseToSlug = {
     'Melanoma':                   'skin-cancer',
     'Basal Cell Carcinoma':       'skin-cancer',
@@ -30,36 +27,27 @@ function getPractoUrl(diseaseName, city = 'delhi') {
     'Chickenpox':                 'chickenpox',
     'Warts Molluscum':            'warts',
   }
-
-  const slug = diseaseToSlug[diseaseName]
-    ?? diseaseName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-
+  const slug = diseaseToSlug[diseaseName] ?? diseaseName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   return `https://www.practo.com/${citySlug}/doctors-for-${slug}-treatment`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Extract risk level from report text  (source of truth)
-// Looks for patterns like:  • Risk Level: Medium   or   • Severity: High
+// Extract risk level (Multilingual Fix: Added "जोखिम स्तर")
 // ─────────────────────────────────────────────────────────────────────────────
 function extractRiskFromReport(reportText) {
   if (!reportText) return null
-  const m = reportText.match(/[•\-*]\s*(?:Risk\s*Level|Severity)\s*[:\-]\s*(low|medium|high)/i)
-  return m ? m[1].toLowerCase() : null
+  // ✅ FIX: Added "जोखिम स्तर" to catch Gemini's Hindi variations
+  const m = reportText.match(/[•\-*]?\s*(?:Risk\s*Level|Severity|गंभीरता|जोखिम\s*स्तर)\s*[:\-]\s*(low|medium|high|कम|मध्यम|उच्च)/i)
+  if (!m) return null;
+  const val = m[1].toLowerCase();
+  if (['high', 'उच्च'].includes(val)) return 'high';
+  if (['medium', 'मध्यम'].includes(val)) return 'medium';
+  return 'low';
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Parse top-3 disease confidence cards
-// Handles multiple formats the AI might produce:
-//   • Psoriasis: 20.79% confidence
-//   • Confidence Level: 24.08%   +  • Model Prediction: Vasculitis
-//   • Vasculitis (24.08%)
-//   Psoriasis — 20.79%
-// ─────────────────────────────────────────────────────────────────────────────
 function parseImageCards(reportText) {
   if (!reportText) return []
   const cards = []
-
-  // Strategy 1: "• Name: XX.XX% confidence"
   const re1 = /[•\-*]\s+([A-Za-z][A-Za-z\s]+?):\s*([\d.]+)%\s*confidence/gi
   let m
   while ((m = re1.exec(reportText)) !== null) {
@@ -70,15 +58,12 @@ function parseImageCards(reportText) {
   }
   if (cards.length >= 2) return cards.slice(0, 3)
 
-  // Strategy 2: "• Name (XX.XX%)" format
   const re2 = /[•\-*]\s+"?([A-Za-z][A-Za-z\s]+?)"?\s+\(([\d.]+)%\)/gi
   while ((m = re2.exec(reportText)) !== null) {
     cards.push({ name: m[1].trim(), pct: parseFloat(m[2]) })
   }
   if (cards.length >= 2) return cards.slice(0, 3)
 
-  // Strategy 3: Inside "Image Analysis" section pull confidence % lines
-  // "• Confidence Level: 24.08%" paired with "• Model Prediction: Vasculitis"
   const imageSection = reportText.match(/3\.\s*Image Analysis([\s\S]*?)(?=\n\d+\.|$)/i)
   if (imageSection) {
     const sec = imageSection[1]
@@ -87,7 +72,6 @@ function parseImageCards(reportText) {
     if (predMatch && confMatch) {
       cards.push({ name: predMatch[1].trim(), pct: parseFloat(confMatch[1]) })
     }
-    // Also grab alternatives from section 4
     const altSection = reportText.match(/4\.\s*Possible Condition([\s\S]*?)(?=\n\d+\.|$)/i)
     if (altSection) {
       const altText = altSection[1]
@@ -100,29 +84,22 @@ function parseImageCards(reportText) {
       }
     }
   }
-
   return cards.slice(0, 3)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Parse report into sections  — handles BOTH formats:
-//   Format A (markdown):  "1.  **Summary**\n   body"
-//   Format B (plain):     "1. Summary\n• bullet\n• bullet"
-// ─────────────────────────────────────────────────────────────────────────────
 function parseReportSections(text) {
   if (!text) return []
-
-  // Strip header decoration like  ===...===  PATIENT REPORT  ===...===
   const cleaned = text.replace(/={3,}[\s\S]*?={3,}\n?/g, '').trim()
-
   const sections = []
-  // Match  "N. Title"  or  "N.  **Title**"  at start of line
-  const sectionRegex = /^(\d+)\.\s+\*{0,2}([^*\n]+)\*{0,2}\s*$/gm
+  
+  const sectionRegex = /^\*{0,2}(\d+)\.\s*\*{0,2}([^*\n]+)\*{0,2}\s*$/gm
   let match
   const indices = []
+  
   while ((match = sectionRegex.exec(cleaned)) !== null) {
     indices.push({ num: match[1], title: match[2].trim(), start: match.index + match[0].length })
   }
+  
   for (let i = 0; i < indices.length; i++) {
     const end = i + 1 < indices.length ? indices[i + 1].start - indices[i + 1].num.length - 3 : cleaned.length
     sections.push({
@@ -134,9 +111,6 @@ function parseReportSections(text) {
   return sections
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SVG Confidence Ring
-// ─────────────────────────────────────────────────────────────────────────────
 function ConfidenceRing({ value }) {
   const r      = 28
   const circ   = 2 * Math.PI * r
@@ -166,12 +140,9 @@ function ConfidenceRing({ value }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Disease confidence mini-cards
-// ─────────────────────────────────────────────────────────────────────────────
 const BAR_COLORS = ['#8b5cf6', '#10b981', '#f97316']
 const BAR_BG     = ['#ede9fe', '#d1fae5', '#ffedd5']
-const BAR_TEXT   = ['text-violet-700', 'text-emerald-700', 'text-orange-600']
+const BAR_TEXT   = ['text-violet-700', 'textemerald-700', 'text-orange-600']
 
 function DiseaseCards({ cards }) {
   if (!cards.length) return null
@@ -203,9 +174,6 @@ function DiseaseCards({ cards }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Floating Practo Widget  — always blue
-// ─────────────────────────────────────────────────────────────────────────────
 function PractoFloatingWidget({ diseaseName, riskLevel }) {
   const [expanded, setExpanded] = useState(false)
   const urgency   = riskLevel === 'high'   ? 'Urgent — book today'
@@ -224,21 +192,16 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
                    style={{ background: 'linear-gradient(135deg,#dbeafe,#eff6ff)' }}>
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                  Dermatologist Recommended
-                </p>
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Dermatologist Recommended</p>
                 <p className="text-sm font-extrabold text-slate-800 leading-tight">{urgency}</p>
               </div>
             </div>
-            <button onClick={() => setExpanded(false)}
-              className="text-slate-300 hover:text-slate-500 text-xl leading-none ml-1">×</button>
+            <button onClick={() => setExpanded(false)} className="text-slate-300 hover:text-slate-500 text-xl leading-none ml-1">×</button>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div className="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2">
@@ -253,43 +216,27 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
           <a href={getPractoUrl(diseaseName)} target="_blank" rel="noreferrer"
              className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
-            <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">
-              practo
-            </span>
+            <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
             Book a Dermatologist ↗
           </a>
-          <p className="mt-2 text-[10px] text-center text-slate-400">
-            Opens Practo · Dermatologists in Delhi
-          </p>
+          <p className="mt-2 text-[10px] text-center text-slate-400">Opens Practo · Dermatologists in Delhi</p>
         </div>
       )}
 
-      {/* Floating pill */}
       <button onClick={() => setExpanded(prev => !prev)}
         className="flex items-center gap-2.5 rounded-full px-5 py-3 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95"
         style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', boxShadow: '0 4px 24px rgba(59,130,246,0.5)' }}>
-        <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">
-          practo
-        </span>
+        <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
         {expanded ? 'Close' : 'Book Dermatologist'}
-        {!expanded && (
-          <span className="ml-0.5 flex h-2 w-2 rounded-full bg-sky-300 ring-2 ring-blue-400 animate-pulse" />
-        )}
+        {!expanded && <span className="ml-0.5 flex h-2 w-2 rounded-full bg-sky-300 ring-2 ring-blue-400 animate-pulse" />}
       </button>
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Report Renderer  — renders parsed sections with styled bullets
-// ─────────────────────────────────────────────────────────────────────────────
 function ReportRenderer({ text }) {
   if (!text) return null
   const sections = parseReportSections(text)
-
-  if (sections.length === 0) {
-    return <p className="text-sm leading-6 text-slate-600 whitespace-pre-wrap">{text}</p>
-  }
 
   function renderInline(str) {
     return str.split(/\*\*([^*]+)\*\*/).map((p, j) =>
@@ -297,14 +244,22 @@ function ReportRenderer({ text }) {
     )
   }
 
+  if (sections.length === 0) {
+    return (
+      <div className="text-sm leading-6 text-slate-600 space-y-2">
+        {text.split('\n').map((line, i) => (
+          <p key={i}>{renderInline(line)}</p>
+        ))}
+      </div>
+    )
+  }
+
   function renderBody(body) {
     const lines = body.split('\n').filter(l => l.trim())
     return lines.map((line, i) => {
-      // Bullet line starting with  •  -  *
       const bulletMatch = line.match(/^[•\-*]\s+(.+)/)
       if (bulletMatch) {
         const content = bulletMatch[1]
-        // "Label: value" bullet  →  bold label
         const labelMatch = content.match(/^([^:]{2,40}):\s*(.+)/)
         if (labelMatch) {
           return (
@@ -324,7 +279,6 @@ function ReportRenderer({ text }) {
           </div>
         )
       }
-      // Plain paragraph
       return (
         <p key={i} className="text-sm text-slate-600 leading-relaxed py-0.5">
           {renderInline(line)}
@@ -350,9 +304,6 @@ function ReportRenderer({ text }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Result Page
-// ─────────────────────────────────────────────────────────────────────────────
 function ResultPage() {
   const { t } = useTranslation()
   const screeningState = useMemo(() => getScreeningState(), [])
@@ -364,14 +315,10 @@ function ResultPage() {
   const pdfUrl      = screeningState?.pdfUrl
   const diseaseName = prediction?.conditionName || 'Unknown'
 
-  // ── Risk level: report is source of truth; fall back to prediction field ──
   const reportText = screeningState?.report || ''
   const riskLevel  = extractRiskFromReport(reportText) || prediction?.riskLevel || 'low'
 
-  // Count real sections for the subtitle
   const sectionCount = useMemo(() => parseReportSections(reportText).length || 6, [reportText])
-
-  // Disease confidence cards parsed from report
   const diseaseCards = useMemo(() => parseImageCards(reportText), [reportText])
 
   function findNearbyDermatologist() {
@@ -414,13 +361,11 @@ function ResultPage() {
       <div className="mx-auto w-full max-w-2xl space-y-4 pb-24">
         <h1 className="text-3xl font-bold text-slate-900">{t('result_title')}</h1>
 
-        {/* ── Result card ── */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm text-slate-500">{t('predicted_condition')}</p>
-                {/* RiskBadge now uses the corrected riskLevel */}
                 <RiskBadge riskLevel={riskLevel} />
               </div>
               <p className="text-2xl font-bold text-slate-900">{diseaseName}</p>
@@ -430,28 +375,19 @@ function ResultPage() {
             </div>
             <ConfidenceRing value={prediction.confidence} />
           </div>
-
-          {/* Disease confidence cards */}
           {diseaseCards.length > 0 && <DiseaseCards cards={diseaseCards} />}
         </section>
 
-        {/* ── Disclaimer ── */}
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           {t('disclaimer')}
         </div>
 
-        {/* ── Full AI Report (collapsible) ── */}
         {reportText && (
           <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <button
-              onClick={() => setReportOpen(prev => !prev)}
-              className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition"
-            >
+            <button onClick={() => setReportOpen(prev => !prev)} className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">{t('ai_analysis')}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Full AI report · {sectionCount} sections
-                </p>
+                <p className="text-xs text-slate-500 mt-0.5">Full AI report · {sectionCount} sections</p>
               </div>
               <span className="text-slate-400 text-base">{reportOpen ? '▲' : '▼'}</span>
             </button>
@@ -463,14 +399,12 @@ function ResultPage() {
           </section>
         )}
 
-        {/* ── Location error ── */}
         {locationError && (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {locationError}
           </div>
         )}
 
-        {/* ── Action buttons ── */}
         <div className="flex flex-wrap gap-3">
           {pdfUrl && (
             <a href={pdfUrl} target="_blank" rel="noreferrer"
@@ -491,9 +425,10 @@ function ResultPage() {
             {t('new_screening')}
           </Link>
         </div>
+
+        <Chatbot />
       </div>
 
-      {/* ── Floating Practo Widget ── */}
       <PractoFloatingWidget diseaseName={diseaseName} riskLevel={riskLevel} />
     </>
   )

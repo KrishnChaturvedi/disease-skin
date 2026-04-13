@@ -61,7 +61,6 @@ export const loginUser = async (req, res) => {
       });
     }
 
-  
     const normalizedEmail = email.trim().toLowerCase();
 
     const user = await User.findOne({ email: normalizedEmail });
@@ -91,7 +90,6 @@ export const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        
       },
     });
 

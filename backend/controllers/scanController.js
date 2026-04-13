@@ -7,7 +7,6 @@ export const createScan = async (req, res) => {
   try {
     const imageUrl = req.file.path;
     const publicId = req.file.filename;
-    // ✅ Extract language from req.body
     const { symptomId, language } = req.body;
 
     if (!symptomId) {
@@ -38,7 +37,6 @@ export const createScan = async (req, res) => {
       imageUrl: imageUrl,
       symptoms: userSymptoms,
       scanId: scan._id.toString(),
-      // ✅ Pass language to Python (default to English if missing)
       language: language || "English" 
     });
 
@@ -59,17 +57,31 @@ export const createScan = async (req, res) => {
       confidence: confidence || 0,
       heatmapUrl: ""
     };
-    scan.report = reportText;
+    
+    // ✅ NEW: Strip all Markdown stars (**) so the PDF is clean
+    scan.report = reportText.replace(/\*\*/g, ""); 
 
     // 4. Calculate Risk
     const highRiskDiseases = ["Melanoma", "Basal Cell Carcinoma", "Squamous Cell Carcinoma"];
     const mediumRiskDiseases = ["Psoriasis", "Eczema", "Acne", "Rosacea"];
 
     let calculatedRisk = "low";
-    if (highRiskDiseases.includes(scan.mlResult.disease)) {
-      calculatedRisk = "high";
-    } else if (mediumRiskDiseases.includes(scan.mlResult.disease)) {
-      calculatedRisk = "medium";
+    
+    // Matches: "Risk Level: High", "Severity: Medium", "गंभीरता: मध्यम", "जोखिम स्तर: मध्यम"
+    const aiRiskMatch = scan.report.match(/[•\-*]?\s*(?:Risk\s*Level|Severity|गंभीरता|जोखिम\s*स्तर)\s*[:\-]\s*(low|medium|high|कम|मध्यम|उच्च)/i);
+    
+    if (aiRiskMatch) {
+      const val = aiRiskMatch[1].toLowerCase();
+      if (['high', 'उच्च'].includes(val)) calculatedRisk = "high";
+      else if (['medium', 'मध्यम'].includes(val)) calculatedRisk = "medium";
+      else calculatedRisk = "low";
+    } else {
+      // Fallback
+      if (highRiskDiseases.includes(scan.mlResult.disease)) {
+        calculatedRisk = "high";
+      } else if (mediumRiskDiseases.includes(scan.mlResult.disease)) {
+        calculatedRisk = "medium";
+      }
     }
 
     scan.riskLevel = calculatedRisk;
