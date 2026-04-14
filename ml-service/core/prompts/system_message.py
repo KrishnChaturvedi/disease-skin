@@ -149,7 +149,7 @@ PATIENT DERMATOLOGY REPORT
 1. Summary
 
 • Detected Condition: {condition}  
-• Confidence Score: {confidence}%  
+• Confidence Score: {confidence}% (Strict confidence score for all disease threat mentioned)
 • Severity: Low / Medium / High  
 • Overall Assessment: Brief 1-line explanation  
 
@@ -168,7 +168,7 @@ PATIENT DERMATOLOGY REPORT
 3. Image Analysis
 
 • Model Prediction:  
-• Confidence Level:  
+• Confidence Level: (Strict confidence score for all disease threat mentioned)
 • Visual Features Observed:  
 • AI Screening Note: AI-based preliminary analysis  
 
@@ -192,9 +192,9 @@ PATIENT DERMATOLOGY REPORT
 6. Recommendations
 
 • Monitor symptoms  
-• Basic home care  
+• Basic home care (Only for low-risk Serverity level)
 • Follow-up timeline  
-• Medical consultation suggestion  
+• Medical consultation suggestion (For medium-risk and high-risk Serverity level)
 
 
 
