@@ -5,28 +5,6 @@ import RiskBadge from '../components/RiskBadge'
 import { getScreeningState } from '../utils/storage'
 import Chatbot from '../components/Chatbot'
 
-// ── SANITIZER FIX ─────────────────────────────────────────────────────────────
-function sanitizeReportText(rawText) {
-  if (!rawText) return '';
-  let text = rawText;
-
-  try {
-    const parsed = JSON.parse(text);
-    if (parsed && typeof parsed === 'object') {
-      text = parsed.output || parsed.text || parsed.report || text;
-    }
-  } catch (e) {
-    // Not JSON, continue
-  }
-
-  if (typeof text === 'string') {
-    text = text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
-  }
-
-  return text;
-}
-// ──────────────────────────────────────────────────────────────────────────────
-
 function getPractoUrl(diseaseName, city = 'Delhi') {
   const specialityMap = {
     'Melanoma':                   'Dermatologist',
@@ -350,11 +328,7 @@ function ResultPage() {
   const pdfUrl      = screeningState?.pdfUrl
   const diseaseName = prediction?.conditionName || 'Unknown'
 
-  // ── SANITIZER APPLIED HERE ──────────────────────────────────────────────────
-  const rawReport = screeningState?.report || ''
-  const reportText = useMemo(() => sanitizeReportText(rawReport), [rawReport])
-  // ────────────────────────────────────────────────────────────────────────────
-
+  const reportText = screeningState?.report || ''
   const riskLevel  = extractRiskFromReport(reportText) || prediction?.riskLevel || 'low'
 
   const sectionCount = useMemo(() => parseReportSections(reportText).length || 6, [reportText])
