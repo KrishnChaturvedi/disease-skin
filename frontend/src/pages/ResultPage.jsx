@@ -6,37 +6,40 @@ import { getScreeningState } from '../utils/storage'
 import Chatbot from '../components/Chatbot'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Practo URL builder
+// Practo URL builder (Fixed: uses correct JSON query format)
 // ─────────────────────────────────────────────────────────────────────────────
-function getPractoUrl(diseaseName, city = 'delhi') {
-  const citySlug = city.toLowerCase().replace(/\s+/g, '-')
-  const diseaseToSlug = {
-    'Melanoma':                   'skin-cancer',
-    'Basal Cell Carcinoma':       'skin-cancer',
-    'Squamous Cell Carcinoma':    'skin-cancer',
-    'Psoriasis':                  'psoriasis',
-    'Eczema':                     'eczema',
-    'Acne':                       'acne',
-    'Rosacea':                    'rosacea',
-    'Actinic Keratosis':          'actinic-keratosis',
-    'Vasculitis':                 'vasculitis',
-    'Vitiligo':                   'vitiligo',
-    'Tinea Ringworm Candidiasis': 'fungal-infection',
-    'Urticaria Hives':            'urticaria',
-    'Nail Fungus':                'nail-fungus',
-    'Chickenpox':                 'chickenpox',
-    'Warts Molluscum':            'warts',
+function getPractoUrl(diseaseName, city = 'Delhi') {
+  const specialityMap = {
+    'Melanoma':                   'Dermatologist',
+    'Basal Cell Carcinoma':       'Dermatologist',
+    'Squamous Cell Carcinoma':    'Dermatologist',
+    'Psoriasis':                  'Dermatologist',
+    'Eczema':                     'Dermatologist',
+    'Acne':                       'Dermatologist',
+    'Rosacea':                    'Dermatologist',
+    'Actinic Keratosis':          'Dermatologist',
+    'Vasculitis':                 'Rheumatologist',
+    'Vitiligo':                   'Dermatologist',
+    'Tinea Ringworm Candidiasis': 'Dermatologist',
+    'Urticaria Hives':            'Dermatologist',
+    'Nail Fungus':                'Dermatologist',
+    'Chickenpox':                 'General Physician',
+    'Warts Molluscum':            'Dermatologist',
   }
-  const slug = diseaseToSlug[diseaseName] ?? diseaseName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  return `https://www.practo.com/${citySlug}/doctors-for-${slug}-treatment`
+  const speciality = specialityMap[diseaseName] ?? 'Dermatologist'
+  const citySlug = city.toLowerCase()
+  const query = encodeURIComponent(
+    JSON.stringify([{ word: speciality, autocompleted: true, category: 'subspeciality' }])
+  )
+  return `https://www.practo.com/search/doctors?results_type=doctor&q=${query}&city=${citySlug}`
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Extract risk level (Multilingual Fix: Added "जोखिम स्तर")
 // ─────────────────────────────────────────────────────────────────────────────
 function extractRiskFromReport(reportText) {
   if (!reportText) return null
-  // ✅ FIX: Added "जोखिम स्तर" to catch Gemini's Hindi variations
   const m = reportText.match(/[•\-*]?\s*(?:Risk\s*Level|Severity|गंभीरता|जोखिम\s*स्तर)\s*[:\-]\s*(low|medium|high|कम|मध्यम|उच्च)/i)
   if (!m) return null;
   const val = m[1].toLowerCase();
@@ -184,7 +187,7 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
                   : 'When convenient'
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-3">
       {expanded && (
         <div className="rounded-2xl bg-white p-4 border border-blue-100"
              style={{ width: 288, boxShadow: '0 12px 48px rgba(37,99,235,0.18)' }}>
@@ -213,22 +216,37 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
               <p className="text-xs font-bold text-blue-800 mt-0.5">Dermatologist</p>
             </div>
           </div>
-          <a href={getPractoUrl(diseaseName)} target="_blank" rel="noreferrer"
-             className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
-             style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
-            <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
-            Book a Dermatologist ↗
-          </a>
-          <p className="mt-2 text-[10px] text-center text-slate-400">Opens Practo · Dermatologists in Delhi</p>
+
+          {/* ── Booking options ── */}
+          <div className="space-y-2">
+            <a href={getPractoUrl(diseaseName)} target="_blank" rel="noreferrer"
+               className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+               style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
+              <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
+              Book a Dermatologist ↗
+            </a>
+
+
+          </div>
+
+          <p className="mt-2 text-[10px] text-center text-slate-400">Dermatologists in Delhi</p>
         </div>
       )}
 
       <button onClick={() => setExpanded(prev => !prev)}
-        className="flex items-center gap-2.5 rounded-full px-5 py-3 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95"
-        style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', boxShadow: '0 4px 24px rgba(59,130,246,0.5)' }}>
-        <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
-        {expanded ? 'Close' : 'Book Dermatologist'}
-        {!expanded && <span className="ml-0.5 flex h-2 w-2 rounded-full bg-sky-300 ring-2 ring-blue-400 animate-pulse" />}
+        className="relative flex items-center justify-center rounded-full transition-all hover:brightness-110 active:scale-95"
+        style={{ width: 56, height: 56, background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', boxShadow: '0 4px 24px rgba(59,130,246,0.5)' }}
+        title="Book Dermatologist">
+        {expanded ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        )}
+        {!expanded && <span className="absolute top-0 right-0 flex h-3 w-3 rounded-full bg-sky-300 ring-2 ring-white animate-pulse" />}
       </button>
     </div>
   )
