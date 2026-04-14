@@ -60,14 +60,15 @@ chatbot_agent = create_agent(
 print("Chatbot ready!")
 
 class ScanRequest(BaseModel):
-    imageUrl: str       
-    symptoms: dict      
-    scanId: str         
-    language: str = "English" # ✅ Added language to model
+    imageUrl: str
+    symptoms: dict
+    scanId: str
+    language: str = "English"
 
 class ChatRequest(BaseModel):
-    message: str        
-    sessionId: str      
+    message: str
+    sessionId: str
+
 
 def download_image(url: str) -> str:
     response = requests.get(url, timeout=10)
@@ -84,26 +85,30 @@ def download_image(url: str) -> str:
 def build_scan_prompt(symptoms: dict, image_path: str, language: str) -> str:
     return f"""
             Patient Questionnaire Answers:
-            - Age: {symptoms.get('age', 'N/A')}
-            - Duration: {symptoms.get('durationDays', 'N/A')} days
-            - Evolution (changed?): {symptoms.get('evolution', 'N/A')}
-            - Itching Level: {symptoms.get('itchingLevel', 'N/A')}
-            - Physical Symptoms: {symptoms.get('physicalSymptoms', 'N/A')}
+            - Main Concern: {symptoms.get('mainConcern', 'N/A')}
+            - Duration: {symptoms.get('durationDays', 'N/A')}
+            - Symptoms (itch/burn/pain): {symptoms.get('symptoms', 'N/A')}
+            - Prior Treatments Tried: {symptoms.get('priorTreatment', 'N/A')}
+            - Known Allergies / Sensitivities: {symptoms.get('allergies', 'N/A')}
+            - Daily Skincare Routine: {symptoms.get('skincareRoutine', 'N/A')}
+            - Current Medications / Supplements: {symptoms.get('currentMedications', 'N/A')}
+            - Family History of Skin Conditions: {symptoms.get('familyHistory', 'N/A')}
             - Sun Exposure: {symptoms.get('sunExposure', 'N/A')}
-            - Family History of Skin Disease: {symptoms.get('familyHistory', 'N/A')}
+            - Recent Physical Changes (size/shape/color): {symptoms.get('physicalChanges', 'N/A')}
 
             Image Path:
             {image_path}
 
             Please analyze the image using the skin_condition_classifier tool, then generate a full dermatology report using the questionnaire answers and classification result.
-            
+
             CRITICAL INSTRUCTIONS FOR OUTPUT:
-            1. You MUST write the ENTIRE final report EXCLUSIVELY in {language}. 
+            1. You MUST write the ENTIRE final report EXCLUSIVELY in {language}.
             2. DO NOT include any internal thought processes, planning steps, or meta-commentary (e.g., do NOT write "The user wants...", "Here is the report...", or "Now I will translate...").
             3. DO NOT provide English translations or English words in brackets next to the {language} words. Use 100% {language}.
             4. Start your response IMMEDIATELY with the report title in {language}, nothing else before it.
             5. Structure the report professionally with clear headings.
             """
+
 
 def parse_ml_result(messages: list) -> tuple:
     disease = "Unknown"
@@ -127,9 +132,11 @@ def parse_ml_result(messages: list) -> tuple:
 
     return disease, confidence
 
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "SkinShield ML"}
+
 
 @app.post("/analyze")
 async def analyze_skin(request: ScanRequest):
@@ -137,7 +144,6 @@ async def analyze_skin(request: ScanRequest):
     try:
         tmp_path = download_image(request.imageUrl)
 
-        # ✅ Pass language to the prompt builder
         prompt = build_scan_prompt(request.symptoms, tmp_path, request.language)
 
         response = analyzer_agent.invoke(
@@ -161,6 +167,7 @@ async def analyze_skin(request: ScanRequest):
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
 
 @app.post("/chat")
 async def chat(request: ChatRequest):

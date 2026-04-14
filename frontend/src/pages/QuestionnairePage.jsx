@@ -19,17 +19,20 @@ function QuestionnairePage() {
     setSymptoms((prev) => ({ ...prev, [field]: value }))
   }
 
-  async function handleSubmit(event) {
+ async function handleSubmit(event) {
     event.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
     try {
-        // Coerce numeric fields to numbers before sending to the backend
+        // REMOVE the Number() coercion for durationDays.
+        // Your dropdown options are already strings (e.g., '1–3 days').
         const payload = {
           ...symptoms,
-          age: symptoms.age === '' ? '' : Number(symptoms.age),
-          durationDays: symptoms.durationDays === '' ? '' : Number(symptoms.durationDays),
+          // Only convert age if it's actually a numeric input field
+          age: symptoms.age ? Number(symptoms.age) : undefined,
+          // Keep durationDays as it is (a string from the select menu)
+          durationDays: symptoms.durationDays 
         }
 
         const response = await axios.post(`${API_BASE}/api/submit-symptoms`, payload)
