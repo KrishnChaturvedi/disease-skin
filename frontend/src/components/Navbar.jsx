@@ -64,6 +64,14 @@ function Navbar() {
           >
             {t('contact', 'Contact Us')}
           </Link>
+          
+          {/* ✅ ADDED ASHA PORTAL LINK HERE */}
+          <Link
+            to="/asha-login"
+            className="rounded-full border border-transparent px-4 py-1.5 text-teal-600 font-semibold transition hover:bg-teal-50 hover:text-teal-700"
+          >
+            ASHA Portal
+          </Link>
 
           {!user && (
             <button
@@ -93,7 +101,7 @@ function Navbar() {
                       : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  {/* CIRCULAR PROFILE PIC (Uses first letter of name) */}
+                  {/* CIRCULAR PROFILE PIC */}
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
@@ -137,7 +145,6 @@ function Navbar() {
                         className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
                       >
                         <span>{t('change_language', 'Language')}</span>
-                        {/* CHANGED TO हिंदी */}
                         <span className="rounded-md bg-white px-2 py-0.5 text-xs font-bold text-indigo-600 shadow-sm ring-1 ring-slate-200">
                           {i18n.language?.startsWith('hi') ? 'EN' : 'हिंदी'}
                         </span>

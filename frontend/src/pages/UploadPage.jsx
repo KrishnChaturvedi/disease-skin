@@ -9,7 +9,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 function UploadPage() {
   const navigate = useNavigate()
-  const { t, i18n } = useTranslation() // ✅ Extracted i18n here
+  const { t, i18n } = useTranslation()
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
@@ -43,9 +43,18 @@ function UploadPage() {
       formData.append('skinImage', selectedFile)
       formData.append('symptomId', symptomId)
       
-      // ✅ NEW: Tell the backend which language the user has selected
       const userLang = i18n.language?.startsWith('hi') ? 'Hindi' : 'English'
       formData.append('language', userLang)
+
+      const ashaPatientRaw = sessionStorage.getItem('asha_patient')
+      if (ashaPatientRaw) {
+        const ashaPatient = JSON.parse(ashaPatientRaw)
+        formData.append('patientName', ashaPatient.patientName)
+        formData.append('age', ashaPatient.age)
+        formData.append('gender', ashaPatient.gender)
+        formData.append('village', ashaPatient.village)
+        if (ashaPatient.phone) formData.append('phone', ashaPatient.phone)
+      }
 
       const response = await axios.post(`${API_BASE}/api/scan`, formData, {
         headers: {
@@ -57,7 +66,6 @@ function UploadPage() {
       if (response.data.success) {
         const scan = response.data.scan
         
-        // --- SAVE TO HISTORY BEFORE NAVIGATING ---
         addToHistory({
           scanId: scan._id,
           disease: scan.mlResult?.disease || 'Unknown',
@@ -65,7 +73,6 @@ function UploadPage() {
           riskLevel: scan.riskLevel || 'low',
           pdfUrl: scan.pdfUrl
         })
-        // ----------------------------------------------
 
         saveScreeningState({
           ...screeningState,

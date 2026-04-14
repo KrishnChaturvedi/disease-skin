@@ -7,7 +7,7 @@ export const createScan = async (req, res) => {
   try {
     const imageUrl = req.file.path;
     const publicId = req.file.filename;
-    const { symptomId, language } = req.body;
+    const { symptomId, language, patientName, age, gender, village, phone } = req.body;
 
     if (!symptomId) {
       return res.status(400).json({ success: false, message: "symptomId is required." });
@@ -18,10 +18,14 @@ export const createScan = async (req, res) => {
       return res.status(404).json({ success: false, message: "Symptoms not found in DB." });
     }
 
-    // 1. Create the pending scan
     const scan = await ScanModel.create({
       user: req.user._id,
       symptomId: symptomId,
+      patientName: patientName || "Unknown",
+      age: age || null,
+      gender: gender || "unknown",
+      village: village || "Unknown",
+      phone: phone || "",
       image: {
         url: imageUrl,
         publicId: publicId,
@@ -30,7 +34,6 @@ export const createScan = async (req, res) => {
       status: "pending",
     });
 
-    // 2. Call the Python FastAPI Service
     const pythonApiUrl = process.env.ML_SERVICE_URL || "http://ml:8000/analyze";
 
     const mlResponse = await axios.post(pythonApiUrl, {
@@ -42,7 +45,6 @@ export const createScan = async (req, res) => {
 
     const { disease, confidence, report } = mlResponse.data;
 
-    // extract plain text from report
     const reportText = Array.isArray(report)
       ? report
           .filter(item => item.type === 'text')
@@ -51,23 +53,19 @@ export const createScan = async (req, res) => {
           .trim()
       : (typeof report === 'string' ? report : JSON.stringify(report));
 
-    // 3. Save the Python Results
     scan.mlResult = {
       disease: disease || "Unknown",
       confidence: confidence || 0,
       heatmapUrl: ""
     };
     
-    // ✅ NEW: Strip all Markdown stars (**) so the PDF is clean
     scan.report = reportText.replace(/\*\*/g, ""); 
 
-    // 4. Calculate Risk
     const highRiskDiseases = ["Melanoma", "Basal Cell Carcinoma", "Squamous Cell Carcinoma"];
     const mediumRiskDiseases = ["Psoriasis", "Eczema", "Acne", "Rosacea"];
 
     let calculatedRisk = "low";
     
-    // Matches: "Risk Level: High", "Severity: Medium", "गंभीरता: मध्यम", "जोखिम स्तर: मध्यम"
     const aiRiskMatch = scan.report.match(/[•\-*]?\s*(?:Risk\s*Level|Severity|गंभीरता|जोखिम\s*स्तर)\s*[:\-]\s*(low|medium|high|कम|मध्यम|उच्च)/i);
     
     if (aiRiskMatch) {
@@ -76,7 +74,6 @@ export const createScan = async (req, res) => {
       else if (['medium', 'मध्यम'].includes(val)) calculatedRisk = "medium";
       else calculatedRisk = "low";
     } else {
-      // Fallback
       if (highRiskDiseases.includes(scan.mlResult.disease)) {
         calculatedRisk = "high";
       } else if (mediumRiskDiseases.includes(scan.mlResult.disease)) {
@@ -88,7 +85,6 @@ export const createScan = async (req, res) => {
     scan.status = "report_done";
     await scan.save();
 
-    // 5. Generate PDF
     const pdfUrl = await generateAndUploadPDF(scan);
     scan.pdfUrl = pdfUrl;
     scan.status = "complete";

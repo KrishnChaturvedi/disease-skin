@@ -92,7 +92,6 @@ function AuthPage() {
         setSuccess('Login successful! Redirecting...')
         setTimeout(() => navigate('/'), 1000)
       } else {
-        // ✅ NEW FIX: Immediately log the user in after registration and redirect!
         login(data.user, data.token)
         setSuccess('Account created successfully! Redirecting...')
         setTimeout(() => navigate('/'), 1000)
@@ -228,6 +227,20 @@ function AuthPage() {
               {isLogin ? 'Register' : 'Login'}
             </button>
           </p>
+
+          {/* ✅ ADDED ASHA WORKER REDIRECT HERE */}
+          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+            <p className="text-sm text-slate-500 mb-2">
+              Government Health Worker?
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/asha-login')}
+              className="w-full rounded-lg bg-teal-50 py-2.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-100 border border-teal-100"
+            >
+              Go to ASHA Portal →
+            </button>
+          </div>
 
         </div>
       </div>

@@ -5,9 +5,6 @@ import RiskBadge from '../components/RiskBadge'
 import { getScreeningState } from '../utils/storage'
 import Chatbot from '../components/Chatbot'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Practo URL builder (Fixed: uses correct JSON query format)
-// ─────────────────────────────────────────────────────────────────────────────
 function getPractoUrl(diseaseName, city = 'Delhi') {
   const specialityMap = {
     'Melanoma':                   'Dermatologist',
@@ -34,10 +31,6 @@ function getPractoUrl(diseaseName, city = 'Delhi') {
   return `https://www.practo.com/search/doctors?results_type=doctor&q=${query}&city=${citySlug}`
 }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Extract risk level (Multilingual Fix: Added "जोखिम स्तर")
-// ─────────────────────────────────────────────────────────────────────────────
 function extractRiskFromReport(reportText) {
   if (!reportText) return null
   const m = reportText.match(/[•\-*]?\s*(?:Risk\s*Level|Severity|गंभीरता|जोखिम\s*स्तर)\s*[:\-]\s*(low|medium|high|कम|मध्यम|उच्च)/i)
@@ -100,15 +93,20 @@ function parseReportSections(text) {
   const indices = []
   
   while ((match = sectionRegex.exec(cleaned)) !== null) {
-    indices.push({ num: match[1], title: match[2].trim(), start: match.index + match[0].length })
+    indices.push({ 
+      num: match[1], 
+      title: match[2].trim(), 
+      bodyStart: match.index + match[0].length,
+      sectionStart: match.index 
+    })
   }
   
   for (let i = 0; i < indices.length; i++) {
-    const end = i + 1 < indices.length ? indices[i + 1].start - indices[i + 1].num.length - 3 : cleaned.length
+    const end = i + 1 < indices.length ? indices[i + 1].sectionStart : cleaned.length
     sections.push({
       num:   indices[i].num,
       title: indices[i].title,
-      body:  cleaned.slice(indices[i].start, end).trim(),
+      body:  cleaned.slice(indices[i].bodyStart, end).trim(),
     })
   }
   return sections
@@ -217,7 +215,6 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
             </div>
           </div>
 
-          {/* ── Booking options ── */}
           <div className="space-y-2">
             <a href={getPractoUrl(diseaseName)} target="_blank" rel="noreferrer"
                className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
@@ -225,8 +222,6 @@ function PractoFloatingWidget({ diseaseName, riskLevel }) {
               <span className="inline-flex items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-blue-700 leading-none">practo</span>
               Book a Dermatologist ↗
             </a>
-
-
           </div>
 
           <p className="mt-2 text-[10px] text-center text-slate-400">Dermatologists in Delhi</p>

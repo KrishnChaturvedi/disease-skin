@@ -10,7 +10,10 @@ import QuestionnairePage from './pages/QuestionnairePage'
 import ReportPage from './pages/ReportPage'
 import ResultPage from './pages/ResultPage'
 import UploadPage from './pages/UploadPage'
-import HistoryPage from './pages/HistoryPage' // <--- ADDED IMPORT
+import HistoryPage from './pages/HistoryPage'
+import AshaAuthPage from './pages/AshaAuthPage'
+import Ashadashboard from './pages/AshaDashboard'
+import AshaPatientInfoPage from './pages/AshaPatientInfoPage'
 
 function App() {
   return (
@@ -26,14 +29,17 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            
-            {/* ---> ADDED ROUTE HERE <--- */}
             <Route path="/history" element={<HistoryPage />} />
 
             <Route path="/screening/questionnaire" element={<QuestionnairePage />} />
             <Route path="/screening/upload" element={<UploadPage />} />
             <Route path="/screening/result" element={<ResultPage />} />
             <Route path="/screening/report/:screeningId" element={<ReportPage />} />
+            
+            <Route path="/asha-login" element={<AshaAuthPage />} />
+            <Route path="/asha-dashboard" element={<Ashadashboard />} />
+            <Route path="/asha-patient-info" element={<AshaPatientInfoPage />} />
+
             <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
