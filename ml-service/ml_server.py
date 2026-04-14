@@ -86,7 +86,7 @@ def build_scan_prompt(symptoms: dict, image_path: str, language: str) -> str:
     return f"""
             Patient Questionnaire Answers:
             - Main Concern: {symptoms.get('mainConcern', 'N/A')}
-            - Duration: {symptoms.get('durationDays', 'N/A')}
+            - Duration: {symptoms.get('durationDays', 'N/A')} days
             - Symptoms (itch/burn/pain): {symptoms.get('symptoms', 'N/A')}
             - Prior Treatments Tried: {symptoms.get('priorTreatment', 'N/A')}
             - Known Allergies / Sensitivities: {symptoms.get('allergies', 'N/A')}
@@ -99,7 +99,16 @@ def build_scan_prompt(symptoms: dict, image_path: str, language: str) -> str:
             Image Path:
             {image_path}
 
+            WORKFLOW CONTEXT:
+            This is a single-stage AI skin condition detection model. It identifies potential skin conditions from images but does NOT provide confirmed diagnosis.
+
             Please analyze the image using the skin_condition_classifier tool, then generate a full dermatology report using the questionnaire answers and classification result.
+
+            CLASSIFICATION OUTPUT EXPECTED:
+            The model should return:
+            - Primary prediction with confidence percentage
+            - Top 3-5 alternate predictions with their confidence percentages
+            - All predictions should sum to approximately 100%
 
             CRITICAL INSTRUCTIONS FOR OUTPUT:
             1. You MUST write the ENTIRE final report EXCLUSIVELY in {language}.
@@ -107,6 +116,15 @@ def build_scan_prompt(symptoms: dict, image_path: str, language: str) -> str:
             3. DO NOT provide English translations or English words in brackets next to the {language} words. Use 100% {language}.
             4. Start your response IMMEDIATELY with the report title in {language}, nothing else before it.
             5. Structure the report professionally with clear headings.
+            6. IMPORTANT: Display ALL prediction confidence percentages clearly:
+               - Show primary prediction with its confidence %
+               - List top 3-5 alternate predictions with their confidence %
+               - Explain what confidence levels mean in patient-friendly terms
+            7. CONDITIONAL HOME REMEDIES:
+               - If severity is LOW AND primary confidence is HIGH (>75%): Include detailed home remedies section
+               - If severity is MEDIUM/HIGH OR confidence is <75%: Emphasize professional consultation
+            8. Clearly state this is a single-stage detection model with screening limitations.
+            9. Adjust recommendations based on confidence level - lower confidence should prompt stronger medical consultation advice.
             """
 
 
