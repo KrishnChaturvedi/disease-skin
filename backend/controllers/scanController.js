@@ -45,13 +45,28 @@ export const createScan = async (req, res) => {
 
     const { disease, confidence, report } = mlResponse.data;
 
-    const reportText = Array.isArray(report)
-      ? report
-          .filter(item => item.type === 'text')
-          .map(item => item.text || '')
-          .join('\n')
-          .trim()
-      : (typeof report === 'string' ? report : JSON.stringify(report));
+    let extractedReport = "";
+    
+    if (typeof report === 'object' && report !== null && !Array.isArray(report)) {
+      extractedReport = report.output || report.text || report.report || JSON.stringify(report);
+    } else if (Array.isArray(report)) {
+      extractedReport = report.filter(item => item.type === 'text').map(item => item.text || '').join('\n');
+    } else {
+      extractedReport = String(report);
+    }
+
+    try {
+      const parsed = JSON.parse(extractedReport);
+      if (parsed && typeof parsed === 'object') {
+        extractedReport = parsed.output || parsed.text || parsed.report || extractedReport;
+      }
+    } catch (e) {}
+
+    const cleanReportText = extractedReport
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\*\*/g, "")
+      .trim();
 
     scan.mlResult = {
       disease: disease || "Unknown",
@@ -59,7 +74,7 @@ export const createScan = async (req, res) => {
       heatmapUrl: ""
     };
     
-    scan.report = reportText.replace(/\*\*/g, ""); 
+    scan.report = cleanReportText; 
 
     const highRiskDiseases = ["Melanoma", "Basal Cell Carcinoma", "Squamous Cell Carcinoma"];
     const mediumRiskDiseases = ["Psoriasis", "Eczema", "Acne", "Rosacea"];
