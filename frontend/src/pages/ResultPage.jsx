@@ -5,6 +5,24 @@ import RiskBadge from '../components/RiskBadge'
 import { getScreeningState } from '../utils/storage'
 import Chatbot from '../components/Chatbot'
 
+function sanitizeReportText(rawText) {
+  if (!rawText) return '';
+  let text = rawText;
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === 'object') {
+      text = parsed.output || parsed.text || parsed.report || text;
+    }
+  } catch (e) {}
+
+  if (typeof text === 'string') {
+    text = text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+  }
+
+  return text;
+}
+
 function getPractoUrl(diseaseName, city = 'Delhi') {
   const specialityMap = {
     'Melanoma':                   'Dermatologist',
@@ -44,42 +62,23 @@ function extractRiskFromReport(reportText) {
 function parseImageCards(reportText) {
   if (!reportText) return []
   const cards = []
-  const re1 = /[•\-*]\s+([A-Za-z][A-Za-z\s]+?):\s*([\d.]+)%\s*confidence/gi
-  let m
-  while ((m = re1.exec(reportText)) !== null) {
+
+  const rx1 = /(?:Primary Detection|Model Prediction)\s*:\s*([A-Za-z\s\-]+?)\s*(?:\(Confidence:\s*|\()\s*([\d.]+)%\s*\)/gi;
+  let m;
+  while ((m = rx1.exec(reportText)) !== null) {
+    cards.push({ name: m[1].trim(), pct: parseFloat(m[2]) })
+  }
+
+  const rx2 = /[•\-*]?\s*([A-Za-z][A-Za-z\s\-]+?)\s*[:(]\s*([\d.]+)%\s*(?:confidence\s*)?[)]?/gi;
+  while ((m = rx2.exec(reportText)) !== null) {
     const name = m[1].trim()
-    if (!['Risk Level','Confidence Level','Severity','Duration','Confidence Score'].includes(name)) {
+    const skip = ['Risk Level','Confidence Level','Severity','Duration','Confidence Score','Primary Detection','Alternate Possibilities','Model Prediction']
+    if (!skip.includes(name) && !cards.find(c => c.name.toLowerCase() === name.toLowerCase())) {
       cards.push({ name, pct: parseFloat(m[2]) })
     }
   }
-  if (cards.length >= 2) return cards.slice(0, 3)
 
-  const re2 = /[•\-*]\s+"?([A-Za-z][A-Za-z\s]+?)"?\s+\(([\d.]+)%\)/gi
-  while ((m = re2.exec(reportText)) !== null) {
-    cards.push({ name: m[1].trim(), pct: parseFloat(m[2]) })
-  }
-  if (cards.length >= 2) return cards.slice(0, 3)
-
-  const imageSection = reportText.match(/3\.\s*Image Analysis([\s\S]*?)(?=\n\d+\.|$)/i)
-  if (imageSection) {
-    const sec = imageSection[1]
-    const predMatch   = sec.match(/Model Prediction\s*:\s*(.+)/i)
-    const confMatch   = sec.match(/Confidence Level\s*:\s*([\d.]+)%/i)
-    if (predMatch && confMatch) {
-      cards.push({ name: predMatch[1].trim(), pct: parseFloat(confMatch[1]) })
-    }
-    const altSection = reportText.match(/4\.\s*Possible Condition([\s\S]*?)(?=\n\d+\.|$)/i)
-    if (altSection) {
-      const altText = altSection[1]
-      const altMatch = altText.match(/Possible Alternatives[^:]*:\s*(.+)/i)
-      if (altMatch) {
-        altMatch[1].split(/[,;]/).forEach(name => {
-          const clean = name.trim().replace(/[()]/g, '')
-          if (clean && clean.length > 2) cards.push({ name: clean, pct: 0 })
-        })
-      }
-    }
-  }
+  cards.sort((a, b) => b.pct - a.pct)
   return cards.slice(0, 3)
 }
 
@@ -326,13 +325,21 @@ function ResultPage() {
 
   const prediction  = screeningState?.prediction
   const pdfUrl      = screeningState?.pdfUrl
-  const diseaseName = prediction?.conditionName || 'Unknown'
 
-  const reportText = screeningState?.report || ''
+  const rawReport = screeningState?.report || ''
+  const reportText = useMemo(() => sanitizeReportText(rawReport), [rawReport])
+
   const riskLevel  = extractRiskFromReport(reportText) || prediction?.riskLevel || 'low'
-
   const sectionCount = useMemo(() => parseReportSections(reportText).length || 6, [reportText])
   const diseaseCards = useMemo(() => parseImageCards(reportText), [reportText])
+
+  let displayDisease = prediction?.conditionName || 'Unknown'
+  let displayConfidence = prediction?.confidence || 0
+
+  if ((displayDisease === 'Unknown' || displayConfidence === 0) && diseaseCards.length > 0) {
+    displayDisease = diseaseCards[0].name
+    displayConfidence = Math.round(diseaseCards[0].pct)
+  }
 
   function findNearbyDermatologist() {
     setLocationError('')
@@ -381,12 +388,12 @@ function ResultPage() {
                 <p className="text-sm text-slate-500">{t('predicted_condition')}</p>
                 <RiskBadge riskLevel={riskLevel} />
               </div>
-              <p className="text-2xl font-bold text-slate-900">{diseaseName}</p>
+              <p className="text-2xl font-bold text-slate-900">{displayDisease}</p>
               <p className="text-[11px] text-slate-400 uppercase tracking-wide font-semibold">
                 AI Skin Analysis · Primary Match
               </p>
             </div>
-            <ConfidenceRing value={prediction.confidence} />
+            <ConfidenceRing value={displayConfidence} />
           </div>
           {diseaseCards.length > 0 && <DiseaseCards cards={diseaseCards} />}
         </section>
@@ -442,7 +449,7 @@ function ResultPage() {
         <Chatbot />
       </div>
 
-      <PractoFloatingWidget diseaseName={diseaseName} riskLevel={riskLevel} />
+      <PractoFloatingWidget diseaseName={displayDisease} riskLevel={riskLevel} />
     </>
   )
 }
