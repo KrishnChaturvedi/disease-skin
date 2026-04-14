@@ -25,7 +25,14 @@ function QuestionnairePage() {
     setError(null)
 
     try {
-      const response = await axios.post(`${API_BASE}/api/submit-symptoms`, symptoms)
+        // Coerce numeric fields to numbers before sending to the backend
+        const payload = {
+          ...symptoms,
+          age: symptoms.age === '' ? '' : Number(symptoms.age),
+          durationDays: symptoms.durationDays === '' ? '' : Number(symptoms.durationDays),
+        }
+
+        const response = await axios.post(`${API_BASE}/api/submit-symptoms`, payload)
 
       if (response.data.success) {
         saveScreeningState({

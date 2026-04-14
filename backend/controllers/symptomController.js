@@ -16,7 +16,9 @@ export const saveSymptoms = async (req, res) => {
   try {
     // Validate request body
     const { error, value } = schema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
 
     // Save to MongoDB
     const newSymptom = new Symptom(value);
@@ -24,6 +26,8 @@ export const saveSymptoms = async (req, res) => {
 
     res.status(201).json({ success: true, data: newSymptom });
   } catch (err) {
+    // Log the error for debugging and return a safe message to the client
+    console.error('Error saving symptoms:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
