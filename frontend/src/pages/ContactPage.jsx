@@ -13,7 +13,7 @@ function ContactPage() {
   ]
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-14 pb-16">
+    <div className="mx-auto w-full max-w-2xl space-y-14 pb-15">
 
 
       <section className="pt-4">
