@@ -13,7 +13,7 @@ function HomePage() {
   return (
     <div className="space-y-24">
 
-      {/* ── Hero ── */}
+
       <section className="pt-8">
         <p className="text-sm font-medium text-indigo-500 tracking-wide">
           {t('hero_tag')}
@@ -40,7 +40,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ── What it does ── */}
+
       <section className="grid gap-12 md:grid-cols-2 items-center">
         <div>
           <h2 className="text-3xl font-bold text-slate-900 leading-snug">
@@ -77,7 +77,7 @@ function HomePage() {
         </p>
       </section>
 
-      {/* ── CTA ── */}
+   
       <section className="text-center pb-4">
         <h2 className="text-3xl font-bold text-slate-900">{t('cta_title')}</h2>
         <p className="mt-3 text-slate-500 max-w-md mx-auto">

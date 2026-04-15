@@ -13,12 +13,12 @@ function AshaDashboard() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [showToast, setShowToast] = useState(location.state?.submitted || false)
 
-  // Stats fetched from backend
+  
   const [stats, setStats] = useState({ today: 0, offline: 0, month: 0 })
   const [recentCases, setRecentCases] = useState([])
   const [loadingStats, setLoadingStats] = useState(true)
 
-  // Online/offline listener
+
   useEffect(() => {
     const goOnline  = () => setIsOffline(false)
     const goOffline = () => setIsOffline(true)
@@ -30,14 +30,13 @@ function AshaDashboard() {
     }
   }, [])
 
-  // Auto-dismiss toast
+
   useEffect(() => {
     if (!showToast) return
     const t = setTimeout(() => setShowToast(false), 3000)
     return () => clearTimeout(t)
   }, [showToast])
 
-  // Fetch ASHA stats from backend
   useEffect(() => {
     async function fetchStats() {
       try {
@@ -56,7 +55,7 @@ function AshaDashboard() {
         }
       } catch (err) {
         console.error('Stats fetch error:', err)
-        // Keep defaults if API fails
+     
       } finally {
         setLoadingStats(false)
       }
@@ -72,7 +71,7 @@ function AshaDashboard() {
   }
 
   function startNewScreening() {
-    // Clear any previous patient info before starting fresh
+
     sessionStorage.removeItem('asha_patient')
     navigate('/asha-patient-info')
   }
@@ -98,14 +97,14 @@ function AshaDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* Offline banner */}
+      
       {isOffline && (
         <div className="bg-amber-500 text-white text-sm text-center py-2 px-4">
           No internet — screenings saved locally. Will sync when signal returns.
         </div>
       )}
 
-      {/* Submission success toast */}
+    
       {showToast && (
         <div className="fixed top-4 right-4 z-50 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-lg flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-emerald-600">
@@ -115,7 +114,7 @@ function AshaDashboard() {
         </div>
       )}
 
-      {/* Header */}
+  
       <div className="bg-gradient-to-r from-teal-600 to-green-500 px-6 py-5">
         <div className="max-w-lg mx-auto flex justify-between items-center">
           <div>
@@ -136,7 +135,7 @@ function AshaDashboard() {
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
 
-        {/* Stats */}
+   
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Screened today', value: loadingStats ? '—' : stats.today, color: 'text-slate-800' },
@@ -150,7 +149,7 @@ function AshaDashboard() {
           ))}
         </div>
 
-        {/* New screening button */}
+    
         <button
           onClick={startNewScreening}
           className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-green-500 px-4 py-4 font-semibold text-white shadow-lg shadow-teal-400/30 transition hover:brightness-110 text-sm"
@@ -158,7 +157,7 @@ function AshaDashboard() {
           + Start New Screening
         </button>
 
-        {/* Recent cases */}
+
         {recentCases.length > 0 && (
           <div>
             <h2 className="text-sm font-semibold text-slate-700 mb-3">Recent screenings</h2>
@@ -183,7 +182,7 @@ function AshaDashboard() {
           </div>
         )}
 
-        {/* Empty state */}
+
         {!loadingStats && recentCases.length === 0 && (
           <div className="bg-white rounded-xl border border-slate-200 px-4 py-8 text-center">
             <p className="text-sm text-slate-500">No screenings yet.</p>

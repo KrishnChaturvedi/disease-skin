@@ -3,9 +3,7 @@ import axios from 'axios';
 export const handleChat = async (req, res) => {
   try {
     const { message } = req.body;
-    
-    // We use the logged-in user's Mongo ID as the session ID.
-    // This allows the LangGraph agent to remember their conversation history!
+
     const sessionId = req.user._id.toString(); 
 
     const pythonApiUrl = process.env.ML_SERVICE_URL || "http://ml:8000";

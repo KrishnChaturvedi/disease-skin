@@ -52,7 +52,7 @@ function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-24 px-4 py-12 sm:px-6 lg:px-8">
 
-      {/* ── Header ── */}
+   
       <section className="text-center pt-4">
         <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight sm:text-5xl leading-tight max-w-3xl mx-auto">
           {t('about_title')}
@@ -62,7 +62,7 @@ function AboutPage() {
         </p>
       </section>
 
-      {/* ── Story ── */}
+ 
       <section className="relative mx-auto max-w-3xl rounded-3xl bg-white p-8 sm:p-10 shadow-sm border border-slate-200">
         <div className="absolute -left-3 top-10 h-24 w-1.5 rounded-full bg-indigo-500"></div>
         <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
@@ -72,7 +72,7 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* ── What we built ── */}
+    
       <section className="space-y-12">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{t('what_we_built')}</h2>
@@ -92,7 +92,6 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* ── Meet the Team ── */}
       <section className="space-y-12">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Meet the Team</h2>
@@ -117,7 +116,7 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* ── Honest note ── */}
+     
       <section className="mx-auto max-w-4xl rounded-3xl bg-linear-to-br from-slate-50 to-indigo-50/30 border border-slate-200 p-8 sm:p-10">
         <div className="flex flex-col sm:flex-row gap-6 items-start">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 text-2xl">

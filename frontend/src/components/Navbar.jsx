@@ -117,11 +117,11 @@ function Navbar() {
                   </svg>
                 </button>
 
-                {/* Dropdown Menu Panel */}
+
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-xl shadow-slate-200/50 ring-1 ring-slate-900/5 focus:outline-none">
                     
-                    {/* Header */}
+                  
                     <div className="mb-2 border-b border-slate-100 px-3 pb-2 pt-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         {t('account', 'Account Settings')}

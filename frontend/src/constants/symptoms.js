@@ -1,4 +1,4 @@
-// File: frontend/src/constants/symptoms.js
+
 
 export function getSymptomQuestions(t) {
   return [

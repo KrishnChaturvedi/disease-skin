@@ -88,7 +88,7 @@ function AshaAuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-teal-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
-        {/* Header */}
+        
         <div className="text-center mb-8">
           <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-1">
             ASHA Worker Portal
@@ -103,10 +103,10 @@ function AshaAuthPage() {
           </p>
         </div>
 
-        {/* Card */}
+ 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-5">
 
-          {/* Toggle */}
+          
           <div className="flex rounded-xl border border-slate-200 p-1 bg-slate-50">
             <button
               type="button"
@@ -132,7 +132,7 @@ function AshaAuthPage() {
             </button>
           </div>
 
-          {/* Error / Success */}
+  
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
               {error}
@@ -144,7 +144,7 @@ function AshaAuthPage() {
             </div>
           )}
 
-          {/* Form */}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {!isLogin && (

@@ -12,7 +12,6 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Auto-scroll to the bottom whenever a new message is added
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -47,13 +46,12 @@ export default function Chatbot() {
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
 
-      {/* Chat Window — independently fixed above the button */}
       {open && (
         <div
           className="flex flex-col rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-2xl"
           style={{ position: 'fixed', bottom: 90, right: 24, width: 340, height: 450, boxShadow: '0 12px 48px rgba(0,0,0,0.18)', zIndex: 50 }}
         >
-          {/* Header */}
+ 
           <div className="bg-indigo-600 px-4 py-3 text-white font-bold flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span>💬</span>
@@ -67,7 +65,7 @@ export default function Chatbot() {
             </button>
           </div>
 
-          {/* Chat History */}
+      
           <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -91,7 +89,6 @@ export default function Chatbot() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Input */}
           <form onSubmit={sendMessage} className="p-3 bg-white border-t border-slate-200 flex gap-2 items-center">
             <input
               type="text"
@@ -112,7 +109,7 @@ export default function Chatbot() {
         </div>
       )}
 
-      {/* Floating Round Icon Button — black */}
+     
       <button
         onClick={() => setOpen(prev => !prev)}
         className="relative flex items-center justify-center rounded-full transition-all hover:scale-105 active:scale-95"

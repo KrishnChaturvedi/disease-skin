@@ -15,7 +15,7 @@ function ContactPage() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-14 pb-16">
 
-      {/* ── Header ── */}
+
       <section className="pt-4">
         <span className="inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-500 tracking-wide uppercase">
           {t('contact_tag')}
@@ -28,9 +28,9 @@ function ContactPage() {
         </p>
       </section>
 
-      {/* ── Contact Cards ── */}
+     
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Email */}
+       
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex gap-4 items-start">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50">
             <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -44,7 +44,7 @@ function ContactPage() {
           </div>
         </div>
 
-        {/* Phone */}
+
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex gap-4 items-start">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50">
             <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

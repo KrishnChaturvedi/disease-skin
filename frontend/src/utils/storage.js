@@ -2,7 +2,7 @@ const SCREENING_STORAGE_KEY = 'skinshield_screening_state'
 const TOKEN_KEY = 'skinshield_token'
 const HISTORY_KEY = 'skinshield_history' // ADDED
 
-// ── Screening state ──────────────────────────────────────────────────────────
+
 
 export function saveScreeningState(payload) {
   localStorage.setItem(SCREENING_STORAGE_KEY, JSON.stringify(payload))

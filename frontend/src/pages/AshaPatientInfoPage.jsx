@@ -25,10 +25,9 @@ function AshaPatientInfoPage() {
       return setError('Enter a valid age.')
     if (!form.village.trim()) return setError('Village name is required.')
 
-    // Save patient info — available to QuestionnairePage, UploadPage, ResultPage
     sessionStorage.setItem('asha_patient', JSON.stringify(form))
 
-    // Hand off to your existing screening flow
+
     navigate('/screening/questionnaire')
   }
 
@@ -36,7 +35,7 @@ function AshaPatientInfoPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-teal-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
-        {/* Header */}
+    
         <div className="text-center mb-8">
           <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-1">
             ASHA Screening
@@ -49,7 +48,7 @@ function AshaPatientInfoPage() {
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-5">
 
-          {/* Back link */}
+     
           <button
             type="button"
             onClick={() => navigate('/asha-dashboard')}
