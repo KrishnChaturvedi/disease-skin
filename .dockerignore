@@ -8,4 +8,5 @@ venv/
 .env
 .git
 __pycache__/
+
 .ipynb_checkpoints

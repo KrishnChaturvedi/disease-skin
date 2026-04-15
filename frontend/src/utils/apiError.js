@@ -16,4 +16,7 @@ export function getApiErrorMessage(error, apiBaseUrl) {
   }
 
   return backendMessage || `Request failed with status code ${status}.`
+
 }
+
+

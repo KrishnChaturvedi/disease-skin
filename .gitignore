@@ -29,7 +29,7 @@ env/
 
 # ========================
 # Environment & Secrets
-# ========================
+
 .env
 .env.local
 
